@@ -1,0 +1,133 @@
+
+Allocating common symbols
+Common symbol       size              file
+
+PONG_count          0x4               aDMAint_svc.o
+PING_count          0x4               aDMAint_svc.o
+PINGPONG_count      0x4               aDMAint_svc.o
+
+Discarded input sections
+
+ .data          0x00000000        0x0 aDMAint_svc.o
+ .data          0x00000000        0x0 aStartup.o
+ .bss           0x00000000        0x0 aStartup.o
+ .text          0x00000000        0x0 cMain.o
+ .data          0x00000000        0x0 cMain.o
+ .bss           0x00000000        0x0 cMain.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.flash          0x08000000      0x734
+ *(.cs3.interrupt_vector)
+ .cs3.interrupt_vector
+                0x08000000       0x84 aStartup.o
+ *(.text .text.*)
+ .text          0x08000084      0x648 aDMAint_svc.o
+                0x08000084                DMA1Stream5int_svc
+ .text          0x080006cc       0x56 aStartup.o
+                0x080006cc                Reset_Handler
+ *fill*         0x08000722        0x2 
+ .text.main     0x08000724       0x10 cMain.o
+                0x08000724                main
+ *(.rodata .rodata.*)
+                0x08000734                __sidata = .
+
+.glue_7         0x08000734        0x0
+ .glue_7        0x00000000        0x0 linker stubs
+
+.glue_7t        0x08000734        0x0
+ .glue_7t       0x00000000        0x0 linker stubs
+
+.vfp11_veneer   0x08000734        0x0
+ .vfp11_veneer  0x00000000        0x0 linker stubs
+
+.v4_bx          0x08000734        0x0
+ .v4_bx         0x00000000        0x0 linker stubs
+
+.iplt           0x08000734        0x0
+ .iplt          0x00000000        0x0 aDMAint_svc.o
+
+.igot.plt       0x08000734        0x0
+ .igot.plt      0x00000000        0x0 aDMAint_svc.o
+
+.rel.dyn        0x08000734        0x0
+ .rel.iplt      0x00000000        0x0 aDMAint_svc.o
+
+.data_at_ram    0x20000000      0x210 load address 0x08000734
+                0x20000000                __sdata = .
+ *(.task_stack .task_stack.*)
+ *(.data .data.*)
+ .data.note     0x20000000        0x4 cMain.o
+                0x20000000                note
+                0x20000004                __edata = .
+                0x20000004                __sbss = .
+ *(.bss .bss.*)
+ *fill*         0x20000004        0x4 
+ .bss           0x20000008      0x208 aDMAint_svc.o
+                0x20000210                __ebss = .
+                0x20020000                __cs3_stack = 0x20020000
+LOAD aDMAint_svc.o
+LOAD aStartup.o
+LOAD cMain.o
+LOAD c:/yagarto/bin/../lib/gcc/arm-none-eabi/4.7.2\libgcc.a
+OUTPUT(./Blinky.elf elf32-littlearm)
+
+.ARM.attributes
+                0x00000000       0x2f
+ .ARM.attributes
+                0x00000000       0x21 aDMAint_svc.o
+ .ARM.attributes
+                0x00000021       0x21 aStartup.o
+ .ARM.attributes
+                0x00000042       0x33 cMain.o
+
+.comment        0x00000000       0x11
+ .comment       0x00000000       0x11 cMain.o
+                                 0x12 (size before relaxing)
+
+.debug_line     0x00000000      0x14d
+ .debug_line    0x00000000       0xa2 aDMAint_svc.o
+ .debug_line    0x000000a2       0x62 aStartup.o
+ .debug_line    0x00000104       0x49 cMain.o
+
+.debug_info     0x00000000      0x177
+ .debug_info    0x00000000       0x8b aDMAint_svc.o
+ .debug_info    0x0000008b       0x8f aStartup.o
+ .debug_info    0x0000011a       0x5d cMain.o
+
+.debug_abbrev   0x00000000       0x74
+ .debug_abbrev  0x00000000       0x14 aDMAint_svc.o
+ .debug_abbrev  0x00000014       0x14 aStartup.o
+ .debug_abbrev  0x00000028       0x4c cMain.o
+
+.debug_aranges  0x00000000       0x60
+ .debug_aranges
+                0x00000000       0x20 aDMAint_svc.o
+ .debug_aranges
+                0x00000020       0x20 aStartup.o
+ .debug_aranges
+                0x00000040       0x20 cMain.o
+
+.bss            0x20000210        0xc load address 0x08000944
+ COMMON         0x20000210        0xc aDMAint_svc.o
+                0x20000210                PONG_count
+                0x20000214                PING_count
+                0x20000218                PINGPONG_count
+
+.debug_loc      0x00000000       0x2c
+ .debug_loc     0x00000000       0x2c cMain.o
+
+.debug_ranges   0x00000000       0x10
+ .debug_ranges  0x00000000       0x10 cMain.o
+
+.debug_str      0x00000000       0x7b
+ .debug_str     0x00000000       0x7b cMain.o
+
+.debug_frame    0x00000000       0x2c
+ .debug_frame   0x00000000       0x2c cMain.o

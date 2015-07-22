@@ -1,0 +1,574 @@
+
+Allocating common symbols
+Common symbol       size              file
+
+TIM_TimeBaseStructure
+                    0xc               cMain.o
+PONG_count          0x4               aDacStream.o
+fifo                0x50              p24.o
+outarray            0xc               aStartup.o
+PING_count          0x4               aDacStream.o
+TIM_OCInitStructure
+                    0x14              cMain.o
+PINGPONG_count      0x4               aDacStream.o
+NVIC_InitStructure  0x4               eval.o
+
+Discarded input sections
+
+ .data          0x00000000        0x0 aStartup.o
+ .bss           0x00000000        0x1 aStartup.o
+ .data          0x00000000        0x0 aDemo.o
+ .data          0x00000000        0x0 aDacStream.o
+ .text          0x00000000        0x0 cMain.o
+ .data          0x00000000        0x0 cMain.o
+ .bss           0x00000000        0x0 cMain.o
+ .data.CCR2_Val
+                0x00000000        0x2 cMain.o
+ .text          0x00000000        0x0 Cit.o
+ .data          0x00000000        0x0 Cit.o
+ .bss           0x00000000        0x0 Cit.o
+ .text.NMI_Handler
+                0x00000000        0x4 Cit.o
+ .text.HardFault_Handler
+                0x00000000        0x4 Cit.o
+ .text.MemManage_Handler
+                0x00000000        0x4 Cit.o
+ .text.BusFault_Handler
+                0x00000000        0x4 Cit.o
+ .text.UsageFault_Handler
+                0x00000000        0x4 Cit.o
+ .text.DebugMon_Handler
+                0x00000000        0x4 Cit.o
+ .text.SVC_Handler
+                0x00000000        0x4 Cit.o
+ .text.PendSV_Handler
+                0x00000000        0x4 Cit.o
+ .text.SysTick_Handler
+                0x00000000        0x4 Cit.o
+ .bss.capture   0x00000000        0x2 Cit.o
+ .debug_info    0x00000000      0x16f Cit.o
+ .debug_abbrev  0x00000000       0x7a Cit.o
+ .debug_aranges
+                0x00000000       0x60 Cit.o
+ .debug_ranges  0x00000000       0x50 Cit.o
+ .debug_line    0x00000000      0x114 Cit.o
+ .debug_str     0x00000000      0x1b7 Cit.o
+ .comment       0x00000000       0x12 Cit.o
+ .ARM.attributes
+                0x00000000       0x33 Cit.o
+ .debug_frame   0x00000000       0xa0 Cit.o
+ .text          0x00000000        0x0 Csystem.o
+ .data          0x00000000        0x0 Csystem.o
+ .bss           0x00000000        0x0 Csystem.o
+ .text.SystemInit
+                0x00000000      0x114 Csystem.o
+ .text.SystemCoreClockUpdate
+                0x00000000       0x94 Csystem.o
+ .data.AHBPrescTable
+                0x00000000       0x10 Csystem.o
+ .text          0x00000000        0x0 tim.o
+ .data          0x00000000        0x0 tim.o
+ .bss           0x00000000        0x0 tim.o
+ .text.TIM_TimeBaseStructInit
+                0x00000000       0x14 tim.o
+ .text.TIM_OC2Init
+                0x00000000       0x9c tim.o
+ .text.TIM_OCStructInit
+                0x00000000       0x14 tim.o
+ .text.TIM_OC2PreloadConfig
+                0x00000000       0x14 tim.o
+ .text          0x00000000        0x0 rcc.o
+ .data          0x00000000        0x0 rcc.o
+ .bss           0x00000000        0x0 rcc.o
+ .text          0x00000000        0x0 gpio.o
+ .data          0x00000000        0x0 gpio.o
+ .bss           0x00000000        0x0 gpio.o
+ .text.GPIO_DeInit
+                0x00000000      0x170 gpio.o
+ .text.GPIO_StructInit
+                0x00000000       0x14 gpio.o
+ .text.GPIO_PinLockConfig
+                0x00000000       0x24 gpio.o
+ .text.GPIO_ReadInputDataBit
+                0x00000000        0xc gpio.o
+ .text.GPIO_ReadInputData
+                0x00000000        0x8 gpio.o
+ .text.GPIO_ReadOutputDataBit
+                0x00000000        0xc gpio.o
+ .text.GPIO_ReadOutputData
+                0x00000000        0x8 gpio.o
+ .text.GPIO_SetBits
+                0x00000000        0x4 gpio.o
+ .text.GPIO_ResetBits
+                0x00000000        0x4 gpio.o
+ .text.GPIO_WriteBit
+                0x00000000        0xc gpio.o
+ .text.GPIO_Write
+                0x00000000        0x4 gpio.o
+ .text.GPIO_ToggleBits
+                0x00000000        0x8 gpio.o
+ .text.GPIO_PinAFConfig
+                0x00000000       0x30 gpio.o
+ .text          0x00000000        0x0 misc.o
+ .data          0x00000000        0x0 misc.o
+ .bss           0x00000000        0x0 misc.o
+ .text.NVIC_PriorityGroupConfig
+                0x00000000       0x14 misc.o
+ .text.NVIC_SetVectorTable
+                0x00000000       0x18 misc.o
+ .text.NVIC_SystemLPConfig
+                0x00000000       0x1c misc.o
+ .text.SysTick_CLKSourceConfig
+                0x00000000       0x1c misc.o
+ .text          0x00000000        0x0 eval.o
+ .data          0x00000000        0x0 eval.o
+ .bss           0x00000000        0x0 eval.o
+ .text.STM_EVAL_LEDOff
+                0x00000000       0x1c eval.o
+ .text.STM_EVAL_LEDToggle
+                0x00000000       0x20 eval.o
+ COMMON         0x00000000        0x4 eval.o
+ .text          0x00000000        0x0 p24.o
+ .data          0x00000000        0x0 p24.o
+ .bss           0x00000000        0x0 p24.o
+ .text.ANCA_Set
+                0x00000000       0x3c p24.o
+ .text.ANCA_Print_Num
+                0x00000000      0x148 p24.o
+ .text.ANCA_Print_Ascii
+                0x00000000        0x4 p24.o
+ .text.hw8stuff
+                0x00000000       0xc4 p24.o
+ .rodata        0x00000000       0x20 p24.o
+ .bss.head      0x00000000        0x4 p24.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.flash          0x08000000     0x2c50
+ *(.cs3.interrupt_vector)
+ .cs3.interrupt_vector
+                0x08000000      0x188 aStartup.o
+ *(.text .text.*)
+ .text          0x08000188       0xba aStartup.o
+                0x08000188                Reset_Handler
+                0x08000188                _init
+                0x08000224                EXTI2_IRQHandler
+                0x08000224                TIM8_CC_IRQHandler
+                0x08000224                TIM1_CC_IRQHandler
+                0x08000224                DMA2_Stream5_IRQHandler
+                0x08000224                DMA1_Stream5_IRQHandler
+                0x08000224                PVD_IRQHandler
+                0x08000224                SDIO_IRQHandler
+                0x08000224                TAMP_STAMP_IRQHandler
+                0x08000224                CAN2_RX1_IRQHandler
+                0x08000224                EXTI3_IRQHandler
+                0x08000224                TIM8_TRG_COM_TIM14_IRQHandler
+                0x08000224                TIM1_UP_TIM10_IRQHandler
+                0x08000224                TIM8_UP_TIM13_IRQHandler
+                0x08000224                I2C3_ER_IRQHandler
+                0x08000224                HASH_RNG_IRQHandler
+                0x08000224                I2C2_EV_IRQHandler
+                0x08000224                DMA1_Stream2_IRQHandler
+                0x08000224                CAN1_RX0_IRQHandler
+                0x08000224                FPU_IRQHandler
+                0x08000224                OTG_HS_WKUP_IRQHandler
+                0x08000224                CAN2_SCE_IRQHandler
+                0x08000224                DMA2_Stream2_IRQHandler
+                0x08000224                SPI1_IRQHandler
+                0x08000224                TIM6_DAC_IRQHandler
+                0x08000224                TIM1_BRK_TIM9_IRQHandler
+                0x08000224                DCMI_IRQHandler
+                0x08000224                CAN2_RX0_IRQHandler
+                0x08000224                DMA2_Stream3_IRQHandler
+                0x08000224                USART6_IRQHandler
+                0x08000224                EXTI0_IRQHandler
+                0x08000224                USART3_IRQHandler
+                0x08000224                RTC_Alarm_IRQHandler
+                0x08000224                CAN1_RX1_IRQHandler
+                0x08000224                UART5_IRQHandler
+                0x08000224                DMA2_Stream0_IRQHandler
+                0x08000224                TIM4_IRQHandler
+                0x08000224                I2C1_EV_IRQHandler
+                0x08000224                DMA1_Stream6_IRQHandler
+                0x08000224                DMA1_Stream1_IRQHandler
+                0x08000224                UART4_IRQHandler
+                0x08000224                RCC_IRQHandler
+                0x08000224                TIM8_BRK_TIM12_IRQHandler
+                0x08000224                EXTI15_10_IRQHandler
+                0x08000224                ADC_IRQHandler
+                0x08000224                DMA1_Stream7_IRQHandler
+                0x08000224                TIM7_IRQHandler
+                0x08000224                CAN2_TX_IRQHandler
+                0x08000224                TIM5_IRQHandler
+                0x08000224                DMA2_Stream7_IRQHandler
+                0x08000224                I2C3_EV_IRQHandler
+                0x08000224                EXTI9_5_IRQHandler
+                0x08000224                RTC_WKUP_IRQHandler
+                0x08000224                ETH_WKUP_IRQHandler
+                0x08000224                SPI2_IRQHandler
+                0x08000224                OTG_HS_EP1_IN_IRQHandler
+                0x08000224                DMA1_Stream0_IRQHandler
+                0x08000224                CAN1_TX_IRQHandler
+                0x08000224                EXTI4_IRQHandler
+                0x08000224                FSMC_IRQHandler
+                0x08000224                ETH_IRQHandler
+                0x08000224                OTG_HS_EP1_OUT_IRQHandler
+                0x08000224                WWDG_IRQHandler
+                0x08000224                TIM2_IRQHandler
+                0x08000224                OTG_FS_WKUP_IRQHandler
+                0x08000224                TIM1_TRG_COM_TIM11_IRQHandler
+                0x08000224                OTG_HS_IRQHandler
+                0x08000224                EXTI1_IRQHandler
+                0x08000224                USART2_IRQHandler
+                0x08000224                I2C2_ER_IRQHandler
+                0x08000224                DMA2_Stream1_IRQHandler
+                0x08000224                CAN1_SCE_IRQHandler
+                0x08000224                FLASH_IRQHandler
+                0x08000224                DMA2_Stream4_IRQHandler
+                0x08000224                USART1_IRQHandler
+                0x08000224                OTG_FS_IRQHandler
+                0x08000224                SPI3_IRQHandler
+                0x08000224                DMA1_Stream4_IRQHandler
+                0x08000224                I2C1_ER_IRQHandler
+                0x08000224                DMA2_Stream6_IRQHandler
+                0x08000224                DMA1_Stream3_IRQHandler
+ *fill*         0x08000242        0x2 
+ .text          0x08000244     0x1c34 aDemo.o
+                0x08000244                P24_init
+                0x080005a6                asm_print_digit
+                0x08001c8a                asm_vdisplay
+                0x08001d84                asm_get_switch
+                0x08001dac                screw_it
+                0x08001dd6                asm_hw8_stuff
+ .text          0x08001e78      0x64c aDacStream.o
+                0x08001e78                DMA1Stream5int_svc
+ .text.TIM_Config
+                0x080024c4       0x64 cMain.o
+                0x080024c4                TIM_Config
+ .text.startup.main
+                0x08002528      0x104 cMain.o
+                0x08002528                main
+ .text.TIM_TimeBaseInit
+                0x0800262c       0x98 tim.o
+                0x0800262c                TIM_TimeBaseInit
+ .text.TIM_PrescalerConfig
+                0x080026c4        0x8 tim.o
+                0x080026c4                TIM_PrescalerConfig
+ .text.TIM_Cmd  0x080026cc       0x1c tim.o
+                0x080026cc                TIM_Cmd
+ .text.TIM_OC1Init
+                0x080026e8       0x90 tim.o
+                0x080026e8                TIM_OC1Init
+ .text.TIM_OC3Init
+                0x08002778       0x98 tim.o
+                0x08002778                TIM_OC3Init
+ .text.TIM_OC4Init
+                0x08002810       0x74 tim.o
+                0x08002810                TIM_OC4Init
+ .text.TIM_OC1PreloadConfig
+                0x08002884       0x10 tim.o
+                0x08002884                TIM_OC1PreloadConfig
+ .text.TIM_OC3PreloadConfig
+                0x08002894       0x10 tim.o
+                0x08002894                TIM_OC3PreloadConfig
+ .text.TIM_OC4PreloadConfig
+                0x080028a4       0x14 tim.o
+                0x080028a4                TIM_OC4PreloadConfig
+ .text.TIM_ITConfig
+                0x080028b8       0x14 tim.o
+                0x080028b8                TIM_ITConfig
+ .text.RCC_AHB1PeriphClockCmd
+                0x080028cc       0x1c rcc.o
+                0x080028cc                RCC_AHB1PeriphClockCmd
+ .text.RCC_APB1PeriphClockCmd
+                0x080028e8       0x1c rcc.o
+                0x080028e8                RCC_APB1PeriphClockCmd
+ .text.GPIO_Init
+                0x08002904       0xb8 gpio.o
+                0x08002904                GPIO_Init
+ .text.NVIC_Init
+                0x080029bc       0x80 misc.o
+                0x080029bc                NVIC_Init
+ .text.STM_EVAL_LEDInit
+                0x08002a3c       0x54 eval.o
+                0x08002a3c                STM_EVAL_LEDInit
+ .text.STM_EVAL_LEDOn
+                0x08002a90       0x1c eval.o
+                0x08002a90                STM_EVAL_LEDOn
+ .text.ANCAInit
+                0x08002aac       0x54 p24.o
+                0x08002aac                ANCAInit
+ .text.ANCA_INIT_All
+                0x08002b00       0x50 p24.o
+                0x08002b00                ANCA_INIT_All
+ .text.queue    0x08002b50       0x2c p24.o
+                0x08002b50                queue
+ .text.dequeue  0x08002b7c       0x3c p24.o
+                0x08002b7c                dequeue
+ .text.getswitch
+                0x08002bb8        0x8 p24.o
+                0x08002bb8                getswitch
+ .text.synthstuff
+                0x08002bc0       0x30 p24.o
+                0x08002bc0                synthstuff
+ *(.rodata .rodata.*)
+ .rodata.GPIO_CLK
+                0x08002bf0       0x10 eval.o
+                0x08002bf0                GPIO_CLK
+ .rodata.GPIO_PIN
+                0x08002c00        0x8 eval.o
+                0x08002c00                GPIO_PIN
+ .rodata.ANCA_CLK
+                0x08002c08       0x30 p24.o
+                0x08002c08                ANCA_CLK
+ .rodata.ANCA_PIN
+                0x08002c38       0x18 p24.o
+                0x08002c38                ANCA_PIN
+                0x08002c50                __sidata = .
+
+.glue_7         0x08002c50        0x0
+ .glue_7        0x00000000        0x0 linker stubs
+
+.glue_7t        0x08002c50        0x0
+ .glue_7t       0x00000000        0x0 linker stubs
+
+.vfp11_veneer   0x08002c50        0x0
+ .vfp11_veneer  0x00000000        0x0 linker stubs
+
+.v4_bx          0x08002c50        0x0
+ .v4_bx         0x00000000        0x0 linker stubs
+
+.iplt           0x08002c50        0x0
+ .iplt          0x00000000        0x0 aStartup.o
+
+.igot.plt       0x08002c50        0x0
+ .igot.plt      0x00000000        0x0 aStartup.o
+
+.rel.dyn        0x08002c50        0x0
+ .rel.iplt      0x00000000        0x0 aStartup.o
+
+.data_at_ram    0x20000000      0x2d4 load address 0x08002c50
+                0x20000000                __sdata = .
+ *(.data .data.*)
+ .data.CCR1_Val
+                0x20000000        0x2 cMain.o
+                0x20000000                CCR1_Val
+ .data.CCR3_Val
+                0x20000002        0x2 cMain.o
+                0x20000002                CCR3_Val
+ .data.CCR4_Val
+                0x20000004        0x2 cMain.o
+                0x20000004                CCR4_Val
+ *fill*         0x20000006        0x2 
+ .data.SystemCoreClock
+                0x20000008        0x4 Csystem.o
+                0x20000008                SystemCoreClock
+ .data.GPIO_PORT
+                0x2000000c       0x10 eval.o
+                0x2000000c                GPIO_PORT
+ .data.note     0x2000001c        0x8 p24.o
+                0x2000001c                note
+ .data.ANCA_PORT
+                0x20000024       0x30 p24.o
+                0x20000024                ANCA_PORT
+                0x20000054                __edata = .
+                0x20000054                __sbss = .
+ *(.bss .bss.*)
+ *fill*         0x20000054        0x4 
+ .bss           0x20000058       0x40 aDemo.o
+ .bss           0x20000098      0x208 aDacStream.o
+ .bss.PrescalerValue
+                0x200002a0        0x2 cMain.o
+                0x200002a0                PrescalerValue
+ *fill*         0x200002a2        0x2 
+ .bss.vdisplay  0x200002a4       0x2c p24.o
+                0x200002a4                vdisplay
+ .bss.tail      0x200002d0        0x4 p24.o
+                0x200002d0                tail
+                0x200002d4                __ebss = .
+                0x20020000                __cs3_stack = 0x20020000
+LOAD aStartup.o
+LOAD aDemo.o
+LOAD aDacStream.o
+LOAD cMain.o
+LOAD Cit.o
+LOAD Csystem.o
+LOAD tim.o
+LOAD rcc.o
+LOAD gpio.o
+LOAD misc.o
+LOAD eval.o
+LOAD p24.o
+LOAD c:/yagarto/bin/../lib/gcc/arm-none-eabi/4.7.2\libgcc.a
+START GROUP
+LOAD c:/yagarto/bin/../lib/gcc/arm-none-eabi/4.7.2\libgcc.a
+LOAD c:/yagarto/bin/../lib/gcc/arm-none-eabi/4.7.2/../../../../arm-none-eabi/lib\libg.a
+LOAD c:/yagarto/bin/../lib/gcc/arm-none-eabi/4.7.2/../../../../arm-none-eabi/lib\libc.a
+END GROUP
+OUTPUT(Blinky.elf elf32-littlearm)
+
+.ARM.attributes
+                0x00000000       0x2f
+ .ARM.attributes
+                0x00000000       0x21 aStartup.o
+ .ARM.attributes
+                0x00000021       0x21 aDemo.o
+ .ARM.attributes
+                0x00000042       0x21 aDacStream.o
+ .ARM.attributes
+                0x00000063       0x33 cMain.o
+ .ARM.attributes
+                0x00000096       0x33 Csystem.o
+ .ARM.attributes
+                0x000000c9       0x33 tim.o
+ .ARM.attributes
+                0x000000fc       0x33 rcc.o
+ .ARM.attributes
+                0x0000012f       0x33 gpio.o
+ .ARM.attributes
+                0x00000162       0x33 misc.o
+ .ARM.attributes
+                0x00000195       0x33 eval.o
+ .ARM.attributes
+                0x000001c8       0x33 p24.o
+
+.comment        0x00000000       0x11
+ .comment       0x00000000       0x11 cMain.o
+                                 0x12 (size before relaxing)
+ .comment       0x00000000       0x12 Csystem.o
+ .comment       0x00000000       0x12 tim.o
+ .comment       0x00000000       0x12 rcc.o
+ .comment       0x00000000       0x12 gpio.o
+ .comment       0x00000000       0x12 misc.o
+ .comment       0x00000000       0x12 eval.o
+ .comment       0x00000000       0x12 p24.o
+
+.debug_line     0x00000000     0x1029
+ .debug_line    0x00000000       0x7e aStartup.o
+ .debug_line    0x0000007e      0x1d5 aDemo.o
+ .debug_line    0x00000253       0xa4 aDacStream.o
+ .debug_line    0x000002f7      0x160 cMain.o
+ .debug_line    0x00000457      0x11f Csystem.o
+ .debug_line    0x00000576      0x2f1 tim.o
+ .debug_line    0x00000867       0xbc rcc.o
+ .debug_line    0x00000923      0x26d gpio.o
+ .debug_line    0x00000b90      0x114 misc.o
+ .debug_line    0x00000ca4      0x13d eval.o
+ .debug_line    0x00000de1      0x248 p24.o
+
+.debug_info     0x00000000     0x3952
+ .debug_info    0x00000000       0x9b aStartup.o
+ .debug_info    0x0000009b       0x94 aDemo.o
+ .debug_info    0x0000012f       0x98 aDacStream.o
+ .debug_info    0x000001c7      0xaea cMain.o
+ .debug_info    0x00000cb1      0x647 Csystem.o
+ .debug_info    0x000012f8      0x82b tim.o
+ .debug_info    0x00001b23      0x342 rcc.o
+ .debug_info    0x00001e65      0x886 gpio.o
+ .debug_info    0x000026eb      0x598 misc.o
+ .debug_info    0x00002c83      0x4b4 eval.o
+ .debug_info    0x00003137      0x81b p24.o
+
+.debug_abbrev   0x00000000      0xd2c
+ .debug_abbrev  0x00000000       0x14 aStartup.o
+ .debug_abbrev  0x00000014       0x14 aDemo.o
+ .debug_abbrev  0x00000028       0x14 aDacStream.o
+ .debug_abbrev  0x0000003c      0x1cc cMain.o
+ .debug_abbrev  0x00000208      0x161 Csystem.o
+ .debug_abbrev  0x00000369      0x125 tim.o
+ .debug_abbrev  0x0000048e       0xe9 rcc.o
+ .debug_abbrev  0x00000577      0x22e gpio.o
+ .debug_abbrev  0x000007a5      0x154 misc.o
+ .debug_abbrev  0x000008f9      0x19a eval.o
+ .debug_abbrev  0x00000a93      0x299 p24.o
+
+.debug_aranges  0x00000000      0x2c8
+ .debug_aranges
+                0x00000000       0x20 aStartup.o
+ .debug_aranges
+                0x00000020       0x20 aDemo.o
+ .debug_aranges
+                0x00000040       0x20 aDacStream.o
+ .debug_aranges
+                0x00000060       0x28 cMain.o
+ .debug_aranges
+                0x00000088       0x28 Csystem.o
+ .debug_aranges
+                0x000000b0       0x88 tim.o
+ .debug_aranges
+                0x00000138       0x28 rcc.o
+ .debug_aranges
+                0x00000160       0x88 gpio.o
+ .debug_aranges
+                0x000001e8       0x40 misc.o
+ .debug_aranges
+                0x00000228       0x38 eval.o
+ .debug_aranges
+                0x00000260       0x68 p24.o
+
+.bss            0x200002e0       0x88 load address 0x08002f30
+ COMMON         0x200002e0        0xc aStartup.o
+                0x200002e0                outarray
+ COMMON         0x200002ec        0xc aDacStream.o
+                0x200002ec                PONG_count
+                0x200002f0                PING_count
+                0x200002f4                PINGPONG_count
+ COMMON         0x200002f8       0x20 cMain.o
+                0x200002f8                TIM_TimeBaseStructure
+                0x20000304                TIM_OCInitStructure
+ COMMON         0x20000318       0x50 p24.o
+                0x20000318                fifo
+
+.debug_loc      0x00000000     0x1089
+ .debug_loc     0x00000000       0x4c cMain.o
+ .debug_loc     0x0000004c      0x168 Csystem.o
+ .debug_loc     0x000001b4      0x5a5 tim.o
+ .debug_loc     0x00000759       0x74 rcc.o
+ .debug_loc     0x000007cd      0x458 gpio.o
+ .debug_loc     0x00000c25      0x1a1 misc.o
+ .debug_loc     0x00000dc6       0x4d eval.o
+ .debug_loc     0x00000e13      0x276 p24.o
+
+.debug_ranges   0x00000000      0x218
+ .debug_ranges  0x00000000       0x18 cMain.o
+ .debug_ranges  0x00000018       0x48 Csystem.o
+ .debug_ranges  0x00000060       0x78 tim.o
+ .debug_ranges  0x000000d8       0x18 rcc.o
+ .debug_ranges  0x000000f0       0x78 gpio.o
+ .debug_ranges  0x00000168       0x30 misc.o
+ .debug_ranges  0x00000198       0x28 eval.o
+ .debug_ranges  0x000001c0       0x58 p24.o
+
+.debug_str      0x00000000     0x12cf
+ .debug_str     0x00000000      0x9ef cMain.o
+                                0xa30 (size before relaxing)
+ .debug_str     0x000009ef      0x1c9 Csystem.o
+                                0x350 (size before relaxing)
+ .debug_str     0x00000bb8       0xef tim.o
+                                0x4a7 (size before relaxing)
+ .debug_str     0x00000ca7       0x4d rcc.o
+                                0x2ab (size before relaxing)
+ .debug_str     0x00000cf4      0x315 gpio.o
+                                0x455 (size before relaxing)
+ .debug_str     0x00001009      0x126 misc.o
+                                0x367 (size before relaxing)
+ .debug_str     0x0000112f       0x72 eval.o
+                                0x419 (size before relaxing)
+ .debug_str     0x000011a1      0x12e p24.o
+                                0x43c (size before relaxing)
+
+.debug_frame    0x00000000      0x4c8
+ .debug_frame   0x00000000       0x48 cMain.o
+ .debug_frame   0x00000048       0x34 Csystem.o
+ .debug_frame   0x0000007c      0x138 tim.o
+ .debug_frame   0x000001b4       0x30 rcc.o
+ .debug_frame   0x000001e4      0x118 gpio.o
+ .debug_frame   0x000002fc       0x68 misc.o
+ .debug_frame   0x00000364       0x5c eval.o
+ .debug_frame   0x000003c0      0x108 p24.o

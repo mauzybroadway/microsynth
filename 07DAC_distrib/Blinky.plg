@@ -1,0 +1,20 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+C:\Documents and Settings\mauzy\My Documents\ENEE440\Project\07DAC_distrib\Blinky.uvproj
+Project File Date:  05/27/2015
+
+<h2>Output:</h2>
+Load "C:\\Documents and Settings\\mauzy\\My Documents\\ENEE440\\Project\\07DAC_distrib\\Blinky.AXF" 
+Load "C:\\Documents and Settings\\mauzy\\My Documents\\ENEE440\\Project\\07DAC_distrib\\Blinky.AXF" 
+Erase Done.
+Programming Done.
+Verify OK.
+Application running ...
+Load "C:\\Documents and Settings\\mauzy\\My Documents\\ENEE440\\Project\\07DAC_distrib\\Blinky.AXF" 
+Erase Done.
+Programming Done.
+Verify OK.
+Application running ...

@@ -1,0 +1,795 @@
+
+Blinky.axf:     file format elf32-littlearm
+
+
+Disassembly of section .flash:
+
+08000000 <DMA1Stream5int_svc-0x84>:
+ 8000000:	20020000 	.word	0x20020000
+ 8000004:	080006fd 	.word	0x080006fd
+ 8000008:	08000755 	.word	0x08000755
+ 800000c:	08000755 	.word	0x08000755
+ 8000010:	08000755 	.word	0x08000755
+ 8000014:	08000755 	.word	0x08000755
+ 8000018:	08000755 	.word	0x08000755
+	...
+ 800002c:	08000755 	.word	0x08000755
+ 8000030:	08000755 	.word	0x08000755
+ 8000034:	00000000 	.word	0x00000000
+ 8000038:	08000755 	.word	0x08000755
+ 800003c:	08000757 	.word	0x08000757
+	...
+ 8000080:	08000085 	.word	0x08000085
+
+08000084 <DMA1Stream5int_svc>:
+	.equ locTEIF5,	 9	@; ""          				transfer error interrupt flag 	 ""
+	.equ locDMEIF5,	 8	@; ""                       direct mode error interrupt  flag ""
+	.equ locFEIF6,	 6	@; ""                       fifo error interrupt flag          ""
+	.equ locCT,		19	@;location of 'current target' (CT) status bit in DMA1 stream 5 control register DMA1_S6CR
+	
+	push {r4-r6}
+ 8000084:	b470      	push	{r4, r5, r6}
+	
+	@;earlier (non-interrupt) version polls TCIF5 to detect switch between buffers, then copies new data into currently not-selected buffer
+	TST_bit	absDMA1_HISR,locTCIF5		@;did a buffer swap occur
+ 8000086:	f246 0204 	movw	r2, #24580	; 0x6004
+ 800008a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800008e:	6810      	ldr	r0, [r2, #0]
+ 8000090:	f410 6000 	ands.w	r0, r0, #2048	; 0x800
+ 8000094:	ea4f 20d0 	mov.w	r0, r0, lsr #11
+	beq 9f								@;	no -- nothing to do, so go back
+ 8000098:	f000 80a1 	beq.w	80001de <pong_end+0xe>
+	
+	adr r4,triangle						@;load triangle table
+ 800009c:	a491      	add	r4, pc, #580	; (adr r4, 80002e4 <triangle>)
+	
+	ldr r2,=PINGPONG_count				@;update count of number of switches between DMA buffers which have occurred
+ 800009e:	f8df 2644 	ldr.w	r2, [pc, #1604]	; 80006e4 <triangle+0x400>
+	ldr r1,[r2]							@; ..
+ 80000a2:	6811      	ldr	r1, [r2, #0]
+	add r1,#1							@; ..
+ 80000a4:	f101 0101 	add.w	r1, r1, #1
+	str r1,[r2]							@; ..
+ 80000a8:	6011      	str	r1, [r2, #0]
+	
+	@;here if DMA has switched to the other buffer
+	SET_bit absDMA1_HIFCR,locTCIF5		@;reset the interrupt flag
+ 80000aa:	f246 020c 	movw	r2, #24588	; 0x600c
+ 80000ae:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80000b2:	6811      	ldr	r1, [r2, #0]
+ 80000b4:	f441 6100 	orr.w	r1, r1, #2048	; 0x800
+ 80000b8:	6011      	str	r1, [r2, #0]
+	TST_bit absDMA1_S5CR,locCT			@;is buffer 0 now being processed?
+ 80000ba:	f246 0288 	movw	r2, #24712	; 0x6088
+ 80000be:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80000c2:	6810      	ldr	r0, [r2, #0]
+ 80000c4:	f410 2000 	ands.w	r0, r0, #524288	; 0x80000
+ 80000c8:	ea4f 40d0 	mov.w	r0, r0, lsr #19
+	@;beq 1f								@;	yes -- so go update buffer 1
+	bne ping
+ 80000cc:	f040 8039 	bne.w	8000142 <ping>
+	beq pong
+ 80000d0:	f000 805e 	beq.w	8000190 <pong>
+
+4:	@;here when its buffer 0's turn to have its address updated (ok because buffer1 is currently being used by DMA)
+
+	@;debug -- count number of times we update 'ping' buffer
+	ldr r2,=PING_count					@;update count of number of switches between DMA buffers which have occurred
+ 80000d4:	f8df 2610 	ldr.w	r2, [pc, #1552]	; 80006e8 <triangle+0x404>
+	ldr r1,[r2]							@; ..
+ 80000d8:	6811      	ldr	r1, [r2, #0]
+	add r1,#1							@; ..
+ 80000da:	f101 0101 	add.w	r1, r1, #1
+	str r1,[r2]							@; ..
+ 80000de:	6011      	str	r1, [r2, #0]
+
+	@;update PINGPONG_count and use it to determine which wave-shape to use (square or triangle)
+	ldr r2,=PINGPONG_count				@;update count of number of switches between DMA buffers which have occurred
+ 80000e0:	f8df 2600 	ldr.w	r2, [pc, #1536]	; 80006e4 <triangle+0x400>
+	ldr r1,[r2]							@; ..
+ 80000e4:	6811      	ldr	r1, [r2, #0]
+	add r1,#1							@; ..
+ 80000e6:	f101 0101 	add.w	r1, r1, #1
+	str r1,[r2]							@; ..
+ 80000ea:	6011      	str	r1, [r2, #0]
+	
+	ands r1,#1							@;which pattern (ramp or square)
+ 80000ec:	f011 0101 	ands.w	r1, r1, #1
+	beq 6f								@;	even values of PINGPONG count -- do ramp
+ 80000f0:	d006      	beq.n	8000100 <DMA1Stream5int_svc+0x7c>
+
+5:	@;here to update buffer0 source address to that of squarewave +step
+	adr r1,DMADEMO_PINGBUF1				@;first of two buffers which supply the data to be written to DAC1
+ 80000f2:	a14c      	add	r1, pc, #304	; (adr r1, 8000224 <DMADEMO_PINGBUF1>)
+	MOV_imm32 r2,absDMA1_S5M0AR			@;first buffer where DMA1 will get its data
+ 80000f4:	f246 0294 	movw	r2, #24724	; 0x6094
+ 80000f8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+	str r1,[r2]
+ 80000fc:	6011      	str	r1, [r2, #0]
+	b 9f
+ 80000fe:	e06e      	b.n	80001de <pong_end+0xe>
+	
+6:	@;here to update buffer0 source address to that of triangle +ramp
+	adr r1,DMADEMO_PINGBUF0				@;first of two buffers which supply the data to be written to DAC1
+ 8000100:	a138      	add	r1, pc, #224	; (adr r1, 80001e4 <DMADEMO_PINGBUF>)
+	MOV_imm32 r2,absDMA1_S5M0AR			@;first buffer where DMA1 will get its data
+ 8000102:	f246 0294 	movw	r2, #24724	; 0x6094
+ 8000106:	f2c4 0202 	movt	r2, #16386	; 0x4002
+	str r1,[r2]
+ 800010a:	6011      	str	r1, [r2, #0]
+	b 9f
+ 800010c:	e067      	b.n	80001de <pong_end+0xe>
+	
+1: 	@;here when it's buffer 1's turn to have its address updated (ok because buffer0 is currently being used by DMA)
+
+	@;debug -- count number of times we update 'pong' buffer
+	ldr r2,=PONG_count					@;update count of number of switches between DMA buffers which have occurred
+ 800010e:	f8df 25dc 	ldr.w	r2, [pc, #1500]	; 80006ec <triangle+0x408>
+	ldr r1,[r2]							@; ..
+ 8000112:	6811      	ldr	r1, [r2, #0]
+	add r1,#1							@; ..
+ 8000114:	f101 0101 	add.w	r1, r1, #1
+	str r1,[r2]							@; ..
+ 8000118:	6011      	str	r1, [r2, #0]
+
+	@; use PINGPONG_count to determine which wave-shape to use (square or triangle)
+	ldr r2,=PINGPONG_count				@;
+ 800011a:	f8df 25c8 	ldr.w	r2, [pc, #1480]	; 80006e4 <triangle+0x400>
+	ldr r1,[r2]							@; ..
+ 800011e:	6811      	ldr	r1, [r2, #0]
+	ands r1,#1							@;which pattern (ramp or square)
+ 8000120:	f011 0101 	ands.w	r1, r1, #1
+	beq 3f								@;	even values of PINGPONG count -- do ramp
+ 8000124:	d006      	beq.n	8000134 <DMA1Stream5int_svc+0xb0>
+
+2:	@;here to update buffer1 source address to that of squarewave +step
+	adr r1,DMADEMO_PONGBUF1				@;first of two buffers which supply the data to be written to DAC2
+ 8000126:	a147      	add	r1, pc, #284	; (adr r1, 8000244 <DMADEMO_PONGBUF1>)
+	MOV_imm32 r2,absDMA1_S5M1AR			@;first buffer where DMA1 will get its data
+ 8000128:	f246 0298 	movw	r2, #24728	; 0x6098
+ 800012c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+	str r1,[r2]
+ 8000130:	6011      	str	r1, [r2, #0]
+	b 9f
+ 8000132:	e054      	b.n	80001de <pong_end+0xe>
+	
+3:	@;here to update buffer1 source address to that of triangle wave -ramp
+	adr r1,DMADEMO_PONGBUF0				@;first of two buffers which supply the data to be written to DAC2
+ 8000134:	a133      	add	r1, pc, #204	; (adr r1, 8000204 <DMADEMO_PONGBUF>)
+	MOV_imm32 r2,absDMA1_S5M1AR			@;first buffer where DMA1 will get its data
+ 8000136:	f246 0298 	movw	r2, #24728	; 0x6098
+ 800013a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+	str r1,[r2]
+ 800013e:	6011      	str	r1, [r2, #0]
+	b 9f
+ 8000140:	e04d      	b.n	80001de <pong_end+0xe>
+
+08000142 <ping>:
+	
+ping:
+	@;ldr r2,=PINGPONG_count				@;
+	@;ldr r1,[r2]							@; ..
+	@;ands r3,r1,#0xF
+	ldr r5,=PINGBUF						@;prepare the PING buffer for transaction
+ 8000142:	f8df 55ac 	ldr.w	r5, [pc, #1452]	; 80006f0 <triangle+0x40c>
+	mov r6,r5
+ 8000146:	462e      	mov	r6, r5
+	
+	ldr r3,=OFFSET						@;pick up where left off
+ 8000148:	f8df 35a8 	ldr.w	r3, [pc, #1448]	; 80006f4 <triangle+0x410>
+	ldrh r2,[r3]						@; ..
+ 800014c:	881a      	ldrh	r2, [r3, #0]
+	cmp r2,#1024
+ 800014e:	f5b2 6f80 	cmp.w	r2, #1024	; 0x400
+	it ge
+ 8000152:	bfa8      	it	ge
+	subge r2,#1024
+ 8000154:	f5a2 6280 	subge.w	r2, r2, #1024	; 0x400
+	add r4,r2							@; ..	
+ 8000158:	4414      	add	r4, r2
+	
+	mov r1,#0
+ 800015a:	f04f 0100 	mov.w	r1, #0
+
+0800015e <ping_loop>:
+
+ping_loop:
+	cmp r1,#16							@; i <= 16 ? cont : kill
+ 800015e:	2910      	cmp	r1, #16
+	beq ping_end
+ 8000160:	f000 800f 	beq.w	8000182 <ping_end>
+	ldrh r0,[r4],#2						@;start filling PING with triangle data
+ 8000164:	f834 0b02 	ldrh.w	r0, [r4], #2
+	strh r0,[r5],#2						@; ..
+ 8000168:	f825 0b02 	strh.w	r0, [r5], #2
+	
+	add r2,#2							@;update offset
+ 800016c:	f102 0202 	add.w	r2, r2, #2
+	cmp r2,#1024
+ 8000170:	f5b2 6f80 	cmp.w	r2, #1024	; 0x400
+	it ge
+ 8000174:	bfa8      	it	ge
+	subge r2,#1024
+ 8000176:	f5a2 6280 	subge.w	r2, r2, #1024	; 0x400
+	add r1,#1							@;i++
+ 800017a:	f101 0101 	add.w	r1, r1, #1
+	b ping_loop
+ 800017e:	f7ff bfee 	b.w	800015e <ping_loop>
+
+08000182 <ping_end>:
+	
+ping_end:
+	str r2,[r3]							@;save OFFSET
+ 8000182:	601a      	str	r2, [r3, #0]
+	@;ldr r5,=PINGBUF						@;reload the PING address
+	MOV_imm32 r2,absDMA1_S5M0AR			@;first buffer where DMA1 will get its data
+ 8000184:	f246 0294 	movw	r2, #24724	; 0x6094
+ 8000188:	f2c4 0202 	movt	r2, #16386	; 0x4002
+	str r6,[r2]
+ 800018c:	6016      	str	r6, [r2, #0]
+	b 9f
+ 800018e:	e026      	b.n	80001de <pong_end+0xe>
+
+08000190 <pong>:
+	
+pong:
+	@;ldr r2,=PINGPONG_count				@;
+	@;ldr r1,[r2]							@; ..
+	@;ands r3,r1,#0xF
+	ldr r5,=PONGBUF						@;prepare the PING buffer for transaction
+ 8000190:	f8df 5564 	ldr.w	r5, [pc, #1380]	; 80006f8 <triangle+0x414>
+	mov r6,r5	@; copy
+ 8000194:	462e      	mov	r6, r5
+	
+	ldr r3,=OFFSET						@;pick up where left off
+ 8000196:	f8df 355c 	ldr.w	r3, [pc, #1372]	; 80006f4 <triangle+0x410>
+	ldrh r2,[r3]						@; ..
+ 800019a:	881a      	ldrh	r2, [r3, #0]
+	cmp r2,#1024
+ 800019c:	f5b2 6f80 	cmp.w	r2, #1024	; 0x400
+	it ge
+ 80001a0:	bfa8      	it	ge
+	subge r2,#1024
+ 80001a2:	f5a2 6280 	subge.w	r2, r2, #1024	; 0x400
+	add r4,r2							@; ..	
+ 80001a6:	4414      	add	r4, r2
+	
+	mov r1,#0
+ 80001a8:	f04f 0100 	mov.w	r1, #0
+
+080001ac <pong_loop>:
+
+pong_loop:
+	cmp r1,#16							@; i <= 16 ? cont : kill
+ 80001ac:	2910      	cmp	r1, #16
+	beq pong_end
+ 80001ae:	f000 800f 	beq.w	80001d0 <pong_end>
+	ldrh r0,[r4],#2						@;start filling PONG with triangle data
+ 80001b2:	f834 0b02 	ldrh.w	r0, [r4], #2
+	strh r0,[r5],#2						@; ..
+ 80001b6:	f825 0b02 	strh.w	r0, [r5], #2
+	
+	add r2,#2							@;update offset
+ 80001ba:	f102 0202 	add.w	r2, r2, #2
+	cmp r2,#1024
+ 80001be:	f5b2 6f80 	cmp.w	r2, #1024	; 0x400
+	it ge
+ 80001c2:	bfa8      	it	ge
+	subge r2,#1024
+ 80001c4:	f5a2 6280 	subge.w	r2, r2, #1024	; 0x400
+	add r1,#1							@;i++
+ 80001c8:	f101 0101 	add.w	r1, r1, #1
+	b pong_loop
+ 80001cc:	f7ff bfee 	b.w	80001ac <pong_loop>
+
+080001d0 <pong_end>:
+	
+pong_end:
+	str r2,[r3]							@;save OFFSET
+ 80001d0:	601a      	str	r2, [r3, #0]
+	@;ldr r5,=PONGBUF						@;reload the PING address
+	MOV_imm32 r2,absDMA1_S5M1AR			@;first buffer where DMA1 will get its data
+ 80001d2:	f246 0298 	movw	r2, #24728	; 0x6098
+ 80001d6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+	str r6,[r2]
+ 80001da:	6016      	str	r6, [r2, #0]
+	b 9f
+ 80001dc:	e7ff      	b.n	80001de <pong_end+0xe>
+	
+
+
+
+9:	@;here when terminal count interrupt flag TCIF was not set ==> nothing to do
+	pop {r4-r6}
+ 80001de:	bc70      	pop	{r4, r5, r6}
+	bx lr
+ 80001e0:	4770      	bx	lr
+ 80001e2:	bf00      	nop
+
+080001e4 <DMADEMO_PINGBUF>:
+ 80001e4:	01000000 	.word	0x01000000
+ 80001e8:	03000200 	.word	0x03000200
+ 80001ec:	05000400 	.word	0x05000400
+ 80001f0:	07000600 	.word	0x07000600
+ 80001f4:	09000800 	.word	0x09000800
+ 80001f8:	0b000a00 	.word	0x0b000a00
+ 80001fc:	0d000c00 	.word	0x0d000c00
+ 8000200:	0f000e00 	.word	0x0f000e00
+
+08000204 <DMADEMO_PONGBUF>:
+ 8000204:	0eff0fff 	.word	0x0eff0fff
+ 8000208:	0cff0dff 	.word	0x0cff0dff
+ 800020c:	0aff0bff 	.word	0x0aff0bff
+ 8000210:	08ff09ff 	.word	0x08ff09ff
+ 8000214:	06ff07ff 	.word	0x06ff07ff
+ 8000218:	04ff05ff 	.word	0x04ff05ff
+ 800021c:	02ff03ff 	.word	0x02ff03ff
+ 8000220:	00ff01ff 	.word	0x00ff01ff
+
+08000224 <DMADEMO_PINGBUF1>:
+	...
+ 8000234:	0fff0fff 	.word	0x0fff0fff
+ 8000238:	0fff0fff 	.word	0x0fff0fff
+ 800023c:	0fff0fff 	.word	0x0fff0fff
+ 8000240:	0fff0fff 	.word	0x0fff0fff
+
+08000244 <DMADEMO_PONGBUF1>:
+ 8000244:	0fff0fff 	.word	0x0fff0fff
+ 8000248:	0fff0fff 	.word	0x0fff0fff
+ 800024c:	0fff0fff 	.word	0x0fff0fff
+ 8000250:	0fff0fff 	.word	0x0fff0fff
+	...
+
+08000264 <TRI_UP>:
+ 8000264:	0f100f00 	.word	0x0f100f00
+ 8000268:	0f300f20 	.word	0x0f300f20
+ 800026c:	0f500f40 	.word	0x0f500f40
+ 8000270:	0f700f60 	.word	0x0f700f60
+ 8000274:	0f900f80 	.word	0x0f900f80
+ 8000278:	0fb00fa0 	.word	0x0fb00fa0
+ 800027c:	0fd00fc0 	.word	0x0fd00fc0
+ 8000280:	0ff00fe0 	.word	0x0ff00fe0
+
+08000284 <TRI_DOWN>:
+ 8000284:	0fef0fff 	.word	0x0fef0fff
+ 8000288:	0fcf0fdf 	.word	0x0fcf0fdf
+ 800028c:	0faf0fbf 	.word	0x0faf0fbf
+ 8000290:	0f8f0f9f 	.word	0x0f8f0f9f
+ 8000294:	0f6f0f7f 	.word	0x0f6f0f7f
+ 8000298:	0f4f0f5f 	.word	0x0f4f0f5f
+ 800029c:	0f2f0f3f 	.word	0x0f2f0f3f
+ 80002a0:	0f0f0f1f 	.word	0x0f0f0f1f
+
+080002a4 <SQ_DOWN>:
+ 80002a4:	0eff0fff 	.word	0x0eff0fff
+ 80002a8:	0cff0dff 	.word	0x0cff0dff
+ 80002ac:	0aff0bff 	.word	0x0aff0bff
+ 80002b0:	08ff09ff 	.word	0x08ff09ff
+ 80002b4:	06ff07ff 	.word	0x06ff07ff
+ 80002b8:	04ff05ff 	.word	0x04ff05ff
+ 80002bc:	02ff03ff 	.word	0x02ff03ff
+ 80002c0:	00ff01ff 	.word	0x00ff01ff
+
+080002c4 <SQ_UP>:
+ 80002c4:	01000000 	.word	0x01000000
+ 80002c8:	03000200 	.word	0x03000200
+ 80002cc:	05000400 	.word	0x05000400
+ 80002d0:	07000600 	.word	0x07000600
+ 80002d4:	09000800 	.word	0x09000800
+ 80002d8:	0b000a00 	.word	0x0b000a00
+ 80002dc:	0d000c00 	.word	0x0d000c00
+ 80002e0:	0f000e00 	.word	0x0f000e00
+
+080002e4 <triangle>:
+ 80002e4:	00100000 	.word	0x00100000
+ 80002e8:	00300020 	.word	0x00300020
+ 80002ec:	00500040 	.word	0x00500040
+ 80002f0:	00700060 	.word	0x00700060
+ 80002f4:	00900080 	.word	0x00900080
+ 80002f8:	00b000a0 	.word	0x00b000a0
+ 80002fc:	00d000c0 	.word	0x00d000c0
+ 8000300:	00f000e0 	.word	0x00f000e0
+ 8000304:	01100100 	.word	0x01100100
+ 8000308:	01300120 	.word	0x01300120
+ 800030c:	01500140 	.word	0x01500140
+ 8000310:	01700160 	.word	0x01700160
+ 8000314:	01900180 	.word	0x01900180
+ 8000318:	01b001a0 	.word	0x01b001a0
+ 800031c:	01d001c0 	.word	0x01d001c0
+ 8000320:	01f001e0 	.word	0x01f001e0
+ 8000324:	02100200 	.word	0x02100200
+ 8000328:	02300220 	.word	0x02300220
+ 800032c:	02500240 	.word	0x02500240
+ 8000330:	02700260 	.word	0x02700260
+ 8000334:	02900280 	.word	0x02900280
+ 8000338:	02b002a0 	.word	0x02b002a0
+ 800033c:	02d002c0 	.word	0x02d002c0
+ 8000340:	02f002e0 	.word	0x02f002e0
+ 8000344:	03100300 	.word	0x03100300
+ 8000348:	03300320 	.word	0x03300320
+ 800034c:	03500340 	.word	0x03500340
+ 8000350:	03700360 	.word	0x03700360
+ 8000354:	03900380 	.word	0x03900380
+ 8000358:	03b003a0 	.word	0x03b003a0
+ 800035c:	03d003c0 	.word	0x03d003c0
+ 8000360:	03f003e0 	.word	0x03f003e0
+ 8000364:	04100400 	.word	0x04100400
+ 8000368:	04300420 	.word	0x04300420
+ 800036c:	04500440 	.word	0x04500440
+ 8000370:	04700460 	.word	0x04700460
+ 8000374:	04900480 	.word	0x04900480
+ 8000378:	04b004a0 	.word	0x04b004a0
+ 800037c:	04d004c0 	.word	0x04d004c0
+ 8000380:	04f004e0 	.word	0x04f004e0
+ 8000384:	05100500 	.word	0x05100500
+ 8000388:	05300520 	.word	0x05300520
+ 800038c:	05500540 	.word	0x05500540
+ 8000390:	05700560 	.word	0x05700560
+ 8000394:	05900580 	.word	0x05900580
+ 8000398:	05b005a0 	.word	0x05b005a0
+ 800039c:	05d005c0 	.word	0x05d005c0
+ 80003a0:	05f005e0 	.word	0x05f005e0
+ 80003a4:	06100600 	.word	0x06100600
+ 80003a8:	06300620 	.word	0x06300620
+ 80003ac:	06500640 	.word	0x06500640
+ 80003b0:	06700660 	.word	0x06700660
+ 80003b4:	06900680 	.word	0x06900680
+ 80003b8:	06b006a0 	.word	0x06b006a0
+ 80003bc:	06d006c0 	.word	0x06d006c0
+ 80003c0:	06f006e0 	.word	0x06f006e0
+ 80003c4:	07100700 	.word	0x07100700
+ 80003c8:	07300720 	.word	0x07300720
+ 80003cc:	07500740 	.word	0x07500740
+ 80003d0:	07700760 	.word	0x07700760
+ 80003d4:	07900780 	.word	0x07900780
+ 80003d8:	07b007a0 	.word	0x07b007a0
+ 80003dc:	07d007c0 	.word	0x07d007c0
+ 80003e0:	07f007e0 	.word	0x07f007e0
+ 80003e4:	08100800 	.word	0x08100800
+ 80003e8:	08300820 	.word	0x08300820
+ 80003ec:	08500840 	.word	0x08500840
+ 80003f0:	08700860 	.word	0x08700860
+ 80003f4:	08900880 	.word	0x08900880
+ 80003f8:	08b008a0 	.word	0x08b008a0
+ 80003fc:	08d008c0 	.word	0x08d008c0
+ 8000400:	08f008e0 	.word	0x08f008e0
+ 8000404:	09100900 	.word	0x09100900
+ 8000408:	09300920 	.word	0x09300920
+ 800040c:	09500940 	.word	0x09500940
+ 8000410:	09700960 	.word	0x09700960
+ 8000414:	09900980 	.word	0x09900980
+ 8000418:	09b009a0 	.word	0x09b009a0
+ 800041c:	09d009c0 	.word	0x09d009c0
+ 8000420:	09f009e0 	.word	0x09f009e0
+ 8000424:	0a100a00 	.word	0x0a100a00
+ 8000428:	0a300a20 	.word	0x0a300a20
+ 800042c:	0a500a40 	.word	0x0a500a40
+ 8000430:	0a700a60 	.word	0x0a700a60
+ 8000434:	0a900a80 	.word	0x0a900a80
+ 8000438:	0ab00aa0 	.word	0x0ab00aa0
+ 800043c:	0ad00ac0 	.word	0x0ad00ac0
+ 8000440:	0af00ae0 	.word	0x0af00ae0
+ 8000444:	0b100b00 	.word	0x0b100b00
+ 8000448:	0b300b20 	.word	0x0b300b20
+ 800044c:	0b500b40 	.word	0x0b500b40
+ 8000450:	0b700b60 	.word	0x0b700b60
+ 8000454:	0b900b80 	.word	0x0b900b80
+ 8000458:	0bb00ba0 	.word	0x0bb00ba0
+ 800045c:	0bd00bc0 	.word	0x0bd00bc0
+ 8000460:	0bf00be0 	.word	0x0bf00be0
+ 8000464:	0c100c00 	.word	0x0c100c00
+ 8000468:	0c300c20 	.word	0x0c300c20
+ 800046c:	0c500c40 	.word	0x0c500c40
+ 8000470:	0c700c60 	.word	0x0c700c60
+ 8000474:	0c900c80 	.word	0x0c900c80
+ 8000478:	0cb00ca0 	.word	0x0cb00ca0
+ 800047c:	0cd00cc0 	.word	0x0cd00cc0
+ 8000480:	0cf00ce0 	.word	0x0cf00ce0
+ 8000484:	0d100d00 	.word	0x0d100d00
+ 8000488:	0d300d20 	.word	0x0d300d20
+ 800048c:	0d500d40 	.word	0x0d500d40
+ 8000490:	0d700d60 	.word	0x0d700d60
+ 8000494:	0d900d80 	.word	0x0d900d80
+ 8000498:	0db00da0 	.word	0x0db00da0
+ 800049c:	0dd00dc0 	.word	0x0dd00dc0
+ 80004a0:	0df00de0 	.word	0x0df00de0
+ 80004a4:	0e100e00 	.word	0x0e100e00
+ 80004a8:	0e300e20 	.word	0x0e300e20
+ 80004ac:	0e500e40 	.word	0x0e500e40
+ 80004b0:	0e700e60 	.word	0x0e700e60
+ 80004b4:	0e900e80 	.word	0x0e900e80
+ 80004b8:	0eb00ea0 	.word	0x0eb00ea0
+ 80004bc:	0ed00ec0 	.word	0x0ed00ec0
+ 80004c0:	0ef00ee0 	.word	0x0ef00ee0
+ 80004c4:	0f100f00 	.word	0x0f100f00
+ 80004c8:	0f300f20 	.word	0x0f300f20
+ 80004cc:	0f500f40 	.word	0x0f500f40
+ 80004d0:	0f700f60 	.word	0x0f700f60
+ 80004d4:	0f900f80 	.word	0x0f900f80
+ 80004d8:	0fb00fa0 	.word	0x0fb00fa0
+ 80004dc:	0fd00fc0 	.word	0x0fd00fc0
+ 80004e0:	0ff00fe0 	.word	0x0ff00fe0
+ 80004e4:	0fef0fff 	.word	0x0fef0fff
+ 80004e8:	0fcf0fdf 	.word	0x0fcf0fdf
+ 80004ec:	0faf0fbf 	.word	0x0faf0fbf
+ 80004f0:	0f8f0f9f 	.word	0x0f8f0f9f
+ 80004f4:	0f6f0f7f 	.word	0x0f6f0f7f
+ 80004f8:	0f4f0f5f 	.word	0x0f4f0f5f
+ 80004fc:	0f2f0f3f 	.word	0x0f2f0f3f
+ 8000500:	0f0f0f1f 	.word	0x0f0f0f1f
+ 8000504:	0eef0eff 	.word	0x0eef0eff
+ 8000508:	0ecf0edf 	.word	0x0ecf0edf
+ 800050c:	0eaf0ebf 	.word	0x0eaf0ebf
+ 8000510:	0e8f0e9f 	.word	0x0e8f0e9f
+ 8000514:	0e6f0e7f 	.word	0x0e6f0e7f
+ 8000518:	0e4f0e5f 	.word	0x0e4f0e5f
+ 800051c:	0e2f0e3f 	.word	0x0e2f0e3f
+ 8000520:	0e0f0e1f 	.word	0x0e0f0e1f
+ 8000524:	0def0dff 	.word	0x0def0dff
+ 8000528:	0dcf0ddf 	.word	0x0dcf0ddf
+ 800052c:	0daf0dbf 	.word	0x0daf0dbf
+ 8000530:	0d8f0d9f 	.word	0x0d8f0d9f
+ 8000534:	0d6f0d7f 	.word	0x0d6f0d7f
+ 8000538:	0d4f0d5f 	.word	0x0d4f0d5f
+ 800053c:	0d2f0d3f 	.word	0x0d2f0d3f
+ 8000540:	0d0f0d1f 	.word	0x0d0f0d1f
+ 8000544:	0cef0cff 	.word	0x0cef0cff
+ 8000548:	0ccf0cdf 	.word	0x0ccf0cdf
+ 800054c:	0caf0cbf 	.word	0x0caf0cbf
+ 8000550:	0c8f0c9f 	.word	0x0c8f0c9f
+ 8000554:	0c6f0c7f 	.word	0x0c6f0c7f
+ 8000558:	0c4f0c5f 	.word	0x0c4f0c5f
+ 800055c:	0c2f0c3f 	.word	0x0c2f0c3f
+ 8000560:	0c0f0c1f 	.word	0x0c0f0c1f
+ 8000564:	0bef0bff 	.word	0x0bef0bff
+ 8000568:	0bcf0bdf 	.word	0x0bcf0bdf
+ 800056c:	0baf0bbf 	.word	0x0baf0bbf
+ 8000570:	0b8f0b9f 	.word	0x0b8f0b9f
+ 8000574:	0b6f0b7f 	.word	0x0b6f0b7f
+ 8000578:	0b4f0b5f 	.word	0x0b4f0b5f
+ 800057c:	0b2f0b3f 	.word	0x0b2f0b3f
+ 8000580:	0b0f0b1f 	.word	0x0b0f0b1f
+ 8000584:	0aef0aff 	.word	0x0aef0aff
+ 8000588:	0acf0adf 	.word	0x0acf0adf
+ 800058c:	0aaf0abf 	.word	0x0aaf0abf
+ 8000590:	0a8f0a9f 	.word	0x0a8f0a9f
+ 8000594:	0a6f0a7f 	.word	0x0a6f0a7f
+ 8000598:	0a4f0a5f 	.word	0x0a4f0a5f
+ 800059c:	0a2f0a3f 	.word	0x0a2f0a3f
+ 80005a0:	0a0f0a1f 	.word	0x0a0f0a1f
+ 80005a4:	09ef09ff 	.word	0x09ef09ff
+ 80005a8:	09cf09df 	.word	0x09cf09df
+ 80005ac:	09af09bf 	.word	0x09af09bf
+ 80005b0:	098f099f 	.word	0x098f099f
+ 80005b4:	096f097f 	.word	0x096f097f
+ 80005b8:	094f095f 	.word	0x094f095f
+ 80005bc:	092f093f 	.word	0x092f093f
+ 80005c0:	090f091f 	.word	0x090f091f
+ 80005c4:	08ef08ff 	.word	0x08ef08ff
+ 80005c8:	08cf08df 	.word	0x08cf08df
+ 80005cc:	08af08bf 	.word	0x08af08bf
+ 80005d0:	088f089f 	.word	0x088f089f
+ 80005d4:	086f087f 	.word	0x086f087f
+ 80005d8:	084f085f 	.word	0x084f085f
+ 80005dc:	082f083f 	.word	0x082f083f
+ 80005e0:	080f081f 	.word	0x080f081f
+ 80005e4:	07ef07ff 	.word	0x07ef07ff
+ 80005e8:	07cf07df 	.word	0x07cf07df
+ 80005ec:	07af07bf 	.word	0x07af07bf
+ 80005f0:	078f079f 	.word	0x078f079f
+ 80005f4:	076f077f 	.word	0x076f077f
+ 80005f8:	074f075f 	.word	0x074f075f
+ 80005fc:	072f073f 	.word	0x072f073f
+ 8000600:	070f071f 	.word	0x070f071f
+ 8000604:	06ef06ff 	.word	0x06ef06ff
+ 8000608:	06cf06df 	.word	0x06cf06df
+ 800060c:	06af06bf 	.word	0x06af06bf
+ 8000610:	068f069f 	.word	0x068f069f
+ 8000614:	066f067f 	.word	0x066f067f
+ 8000618:	064f065f 	.word	0x064f065f
+ 800061c:	062f063f 	.word	0x062f063f
+ 8000620:	060f061f 	.word	0x060f061f
+ 8000624:	05ef05ff 	.word	0x05ef05ff
+ 8000628:	05cf05df 	.word	0x05cf05df
+ 800062c:	05af05bf 	.word	0x05af05bf
+ 8000630:	058f059f 	.word	0x058f059f
+ 8000634:	056f057f 	.word	0x056f057f
+ 8000638:	054f055f 	.word	0x054f055f
+ 800063c:	052f053f 	.word	0x052f053f
+ 8000640:	050f051f 	.word	0x050f051f
+ 8000644:	04ef04ff 	.word	0x04ef04ff
+ 8000648:	04cf04df 	.word	0x04cf04df
+ 800064c:	04af04bf 	.word	0x04af04bf
+ 8000650:	048f049f 	.word	0x048f049f
+ 8000654:	046f047f 	.word	0x046f047f
+ 8000658:	044f045f 	.word	0x044f045f
+ 800065c:	042f043f 	.word	0x042f043f
+ 8000660:	040f041f 	.word	0x040f041f
+ 8000664:	03ef03ff 	.word	0x03ef03ff
+ 8000668:	03cf03df 	.word	0x03cf03df
+ 800066c:	03af03bf 	.word	0x03af03bf
+ 8000670:	038f039f 	.word	0x038f039f
+ 8000674:	036f037f 	.word	0x036f037f
+ 8000678:	034f035f 	.word	0x034f035f
+ 800067c:	032f033f 	.word	0x032f033f
+ 8000680:	030f031f 	.word	0x030f031f
+ 8000684:	02ef02ff 	.word	0x02ef02ff
+ 8000688:	02cf02df 	.word	0x02cf02df
+ 800068c:	02af02bf 	.word	0x02af02bf
+ 8000690:	028f029f 	.word	0x028f029f
+ 8000694:	026f027f 	.word	0x026f027f
+ 8000698:	024f025f 	.word	0x024f025f
+ 800069c:	022f023f 	.word	0x022f023f
+ 80006a0:	020f021f 	.word	0x020f021f
+ 80006a4:	01ef01ff 	.word	0x01ef01ff
+ 80006a8:	01cf01df 	.word	0x01cf01df
+ 80006ac:	01af01bf 	.word	0x01af01bf
+ 80006b0:	018f019f 	.word	0x018f019f
+ 80006b4:	016f017f 	.word	0x016f017f
+ 80006b8:	014f015f 	.word	0x014f015f
+ 80006bc:	012f013f 	.word	0x012f013f
+ 80006c0:	010f011f 	.word	0x010f011f
+ 80006c4:	00ef00ff 	.word	0x00ef00ff
+ 80006c8:	00cf00df 	.word	0x00cf00df
+ 80006cc:	00af00bf 	.word	0x00af00bf
+ 80006d0:	008f009f 	.word	0x008f009f
+ 80006d4:	006f007f 	.word	0x006f007f
+ 80006d8:	004f005f 	.word	0x004f005f
+ 80006dc:	002f003f 	.word	0x002f003f
+ 80006e0:	000f001f 	.word	0x000f001f
+	TST_bit	absDMA1_HISR,locTCIF5		@;did a buffer swap occur
+	beq 9f								@;	no -- nothing to do, so go back
+	
+	adr r4,triangle						@;load triangle table
+	
+	ldr r2,=PINGPONG_count				@;update count of number of switches between DMA buffers which have occurred
+ 80006e4:	20000210 	.word	0x20000210
+	beq pong
+
+4:	@;here when its buffer 0's turn to have its address updated (ok because buffer1 is currently being used by DMA)
+
+	@;debug -- count number of times we update 'ping' buffer
+	ldr r2,=PING_count					@;update count of number of switches between DMA buffers which have occurred
+ 80006e8:	2000020c 	.word	0x2000020c
+	b 9f
+	
+1: 	@;here when it's buffer 1's turn to have its address updated (ok because buffer0 is currently being used by DMA)
+
+	@;debug -- count number of times we update 'pong' buffer
+	ldr r2,=PONG_count					@;update count of number of switches between DMA buffers which have occurred
+ 80006ec:	20000208 	.word	0x20000208
+	
+ping:
+	@;ldr r2,=PINGPONG_count				@;
+	@;ldr r1,[r2]							@; ..
+	@;ands r3,r1,#0xF
+	ldr r5,=PINGBUF						@;prepare the PING buffer for transaction
+ 80006f0:	20000000 	.word	0x20000000
+	mov r6,r5
+	
+	ldr r3,=OFFSET						@;pick up where left off
+ 80006f4:	20000200 	.word	0x20000200
+	
+pong:
+	@;ldr r2,=PINGPONG_count				@;
+	@;ldr r1,[r2]							@; ..
+	@;ands r3,r1,#0xF
+	ldr r5,=PONGBUF						@;prepare the PING buffer for transaction
+ 80006f8:	20000100 	.word	0x20000100
+
+080006fc <Reset_Handler>:
+	.thumb_func 			@; identify target type to linker
+Reset_Handler:				@; @; start-from-reset code; initialize hardware and system data, launch main()
+	@; copy .data section (initialized data) from flash to RAM (currently we must do this in each source file)
+	@; (!!todo: figure out how we can get the compiler/asembler/linker to place constants in .rodata, etc)
+copy_data:	
+	ldr r1, DATA_BEG
+ 80006fc:	4911      	ldr	r1, [pc, #68]	; (8000744 <DATA_BEG>)
+	ldr r2, TEXT_END
+ 80006fe:	4a10      	ldr	r2, [pc, #64]	; (8000740 <TEXT_END>)
+	ldr r3, DATA_END
+ 8000700:	4b11      	ldr	r3, [pc, #68]	; (8000748 <DATA_END>)
+	subs r3, r3, r1			@; length of initialized data
+ 8000702:	1a5b      	subs	r3, r3, r1
+	beq zero_bss			@; skip if none
+ 8000704:	f000 8007 	beq.w	8000716 <zero_bss>
+
+08000708 <copy_data_loop>:
+copy_data_loop: 
+	ldrb r4,[r2], #1		@; read byte from flash
+ 8000708:	f812 4b01 	ldrb.w	r4, [r2], #1
+	strb r4, [r1], #1  		@; store byte to RAM
+ 800070c:	f801 4b01 	strb.w	r4, [r1], #1
+	subs r3, r3, #1  		@; decrement counter
+ 8000710:	3b01      	subs	r3, #1
+	bgt copy_data_loop		@; repeat until done
+ 8000712:	f73f aff9 	bgt.w	8000708 <copy_data_loop>
+
+08000716 <zero_bss>:
+
+	@; zero out .bss section (uninitialized data) (currently we must do this in each source file)
+	@; (!!todo: figure out how to get the linker to give us the extents of the merged .bss sections)
+zero_bss: 	
+	ldr r1, BSS_BEG
+ 8000716:	490d      	ldr	r1, [pc, #52]	; (800074c <BSS_BEG>)
+	ldr r3, BSS_END
+ 8000718:	4b0d      	ldr	r3, [pc, #52]	; (8000750 <BSS_END>)
+	subs r3, r3, r1			@; Length of uninitialized data
+ 800071a:	1a5b      	subs	r3, r3, r1
+	beq initRCC				@; Skip if none
+ 800071c:	f000 8007 	beq.w	800072e <call_main>
+	mov r2, #0				@; value to initialize .bss with
+ 8000720:	f04f 0200 	mov.w	r2, #0
+
+08000724 <zero_bss_loop>:
+zero_bss_loop: 	
+	strb r2, [r1],#1		@; Store zero
+ 8000724:	f801 2b01 	strb.w	r2, [r1], #1
+	subs r3, r3, #1			@; Decrement counter
+ 8000728:	3b01      	subs	r3, #1
+	bgt zero_bss_loop		@; Repeat until done
+ 800072a:	f73f affb 	bgt.w	8000724 <zero_bss_loop>
+
+0800072e <call_main>:
+	@; necessary hardware stuff -- replaces SystemCoreClockUpdate() function call in main()
+	@;now called in main()
+
+	@exit to main (wont return)
+call_main:
+	bl.W (0x08010000+1)
+ 800072e:	f00f fc67 	bl	8010000 <__sidata+0xf89c>
+	mov	r0, #0				@; argc=0
+ 8000732:	f04f 0000 	mov.w	r0, #0
+	mov r1, #0				@; argv=NULL
+ 8000736:	f04f 0100 	mov.w	r1, #0
+	bl	main 				@; gone
+ 800073a:	f000 f80f 	bl	800075c <main>
+	b .						@; trap if return
+ 800073e:	e7fe      	b.n	800073e <call_main+0x10>
+
+08000740 <TEXT_END>:
+ 8000740:	08000764 	.word	0x08000764
+
+08000744 <DATA_BEG>:
+ 8000744:	20000000 	.word	0x20000000
+
+08000748 <DATA_END>:
+ 8000748:	20000000 	.word	0x20000000
+
+0800074c <BSS_BEG>:
+ 800074c:	20000000 	.word	0x20000000
+
+08000750 <BSS_END>:
+ 8000750:	20000208 	.word	0x20000208
+
+08000754 <BogusInt_Handler>:
+SVC_Handler: 
+	.thumb_func
+DebugMon_Handler:
+	.thumb_func
+PendSV_Handler:
+	bx  r14	 /* put a breakpoint here when we're debugging so we can trap here but then return to interrupted code */
+ 8000754:	4770      	bx	lr
+
+08000756 <SysTick_Handler>:
+ 
+ 	.thumb_func
+SysTick_Handler: 
+	bl DMA1Stream5int_svc
+ 8000756:	f7ff fc95 	bl	8000084 <DMA1Stream5int_svc>
+	...
+
+0800075c <main>:
+
+
+void DMA1Stream5int_svc(void);	//can be run as a function as well as an interrupt
+
+int main(void)
+{
+ 800075c:	b480      	push	{r7}
+ 800075e:	af00      	add	r7, sp, #0
+	//asm("bl.W (0x08010000+1)");		//go up to DAC1_TIM7_DMA1_init();			
+	//DMA1Stream5int_svc();			//for debug -- if you bkpt here and step into the interrupt service, you can then set bkpt there
+	while(1);
+ 8000760:	e7fe      	b.n	8000760 <main+0x4>
+ 8000762:	bf00      	nop

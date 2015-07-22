@@ -1,0 +1,4248 @@
+
+Blinky.axf:     file format elf32-littlearm
+
+
+Disassembly of section .flash:
+
+08000000 <DMA1Stream5int_svc-0x84>:
+ 8000000:	20020000 	.word	0x20020000
+ 8000004:	08002331 	.word	0x08002331
+ 8000008:	0800238d 	.word	0x0800238d
+ 800000c:	0800238d 	.word	0x0800238d
+ 8000010:	0800238d 	.word	0x0800238d
+ 8000014:	0800238d 	.word	0x0800238d
+ 8000018:	0800238d 	.word	0x0800238d
+	...
+ 800002c:	0800238d 	.word	0x0800238d
+ 8000030:	0800238d 	.word	0x0800238d
+ 8000034:	00000000 	.word	0x00000000
+ 8000038:	0800238d 	.word	0x0800238d
+ 800003c:	0800238f 	.word	0x0800238f
+	...
+ 8000080:	08000085 	.word	0x08000085
+
+08000084 <DMA1Stream5int_svc>:
+	.equ locTEIF5,	 9	@; ""          				transfer error interrupt flag 	 ""
+	.equ locDMEIF5,	 8	@; ""                       direct mode error interrupt  flag ""
+	.equ locFEIF6,	 6	@; ""                       fifo error interrupt flag          ""
+	.equ locCT,		19	@;location of 'current target' (CT) status bit in DMA1 stream 5 control register DMA1_S6CR
+	
+	push {r4-r6}
+ 8000084:	b470      	push	{r4, r5, r6}
+	
+	@;earlier (non-interrupt) version polls TCIF5 to detect switch between buffers, then copies new data into currently not-selected buffer
+	TST_bit	absDMA1_HISR,locTCIF5		@;did a buffer swap occur
+ 8000086:	f246 0204 	movw	r2, #24580	; 0x6004
+ 800008a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800008e:	6810      	ldr	r0, [r2, #0]
+ 8000090:	f410 6000 	ands.w	r0, r0, #2048	; 0x800
+ 8000094:	ea4f 20d0 	mov.w	r0, r0, lsr #11
+	beq 9f								@;	no -- nothing to do, so go back
+ 8000098:	f000 80a1 	beq.w	80001de <pong_end+0xe>
+	
+	adr r4,triangle						@;load triangle table
+ 800009c:	a491      	add	r4, pc, #580	; (adr r4, 80002e4 <triangle>)
+	
+	ldr r2,=PINGPONG_count				@;update count of number of switches between DMA buffers which have occurred
+ 800009e:	f8df 2644 	ldr.w	r2, [pc, #1604]	; 80006e4 <triangle+0x400>
+	ldr r1,[r2]							@; ..
+ 80000a2:	6811      	ldr	r1, [r2, #0]
+	add r1,#1							@; ..
+ 80000a4:	f101 0101 	add.w	r1, r1, #1
+	str r1,[r2]							@; ..
+ 80000a8:	6011      	str	r1, [r2, #0]
+	
+	@;here if DMA has switched to the other buffer
+	SET_bit absDMA1_HIFCR,locTCIF5		@;reset the interrupt flag
+ 80000aa:	f246 020c 	movw	r2, #24588	; 0x600c
+ 80000ae:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80000b2:	6811      	ldr	r1, [r2, #0]
+ 80000b4:	f441 6100 	orr.w	r1, r1, #2048	; 0x800
+ 80000b8:	6011      	str	r1, [r2, #0]
+	TST_bit absDMA1_S5CR,locCT			@;is buffer 0 now being processed?
+ 80000ba:	f246 0288 	movw	r2, #24712	; 0x6088
+ 80000be:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80000c2:	6810      	ldr	r0, [r2, #0]
+ 80000c4:	f410 2000 	ands.w	r0, r0, #524288	; 0x80000
+ 80000c8:	ea4f 40d0 	mov.w	r0, r0, lsr #19
+	@;beq 1f								@;	yes -- so go update buffer 1
+	bne ping
+ 80000cc:	f040 8039 	bne.w	8000142 <ping>
+	beq pong
+ 80000d0:	f000 805e 	beq.w	8000190 <pong>
+
+4:	@;here when its buffer 0's turn to have its address updated (ok because buffer1 is currently being used by DMA)
+
+	@;debug -- count number of times we update 'ping' buffer
+	ldr r2,=PING_count					@;update count of number of switches between DMA buffers which have occurred
+ 80000d4:	f8df 2610 	ldr.w	r2, [pc, #1552]	; 80006e8 <triangle+0x404>
+	ldr r1,[r2]							@; ..
+ 80000d8:	6811      	ldr	r1, [r2, #0]
+	add r1,#1							@; ..
+ 80000da:	f101 0101 	add.w	r1, r1, #1
+	str r1,[r2]							@; ..
+ 80000de:	6011      	str	r1, [r2, #0]
+
+	@;update PINGPONG_count and use it to determine which wave-shape to use (square or triangle)
+	ldr r2,=PINGPONG_count				@;update count of number of switches between DMA buffers which have occurred
+ 80000e0:	f8df 2600 	ldr.w	r2, [pc, #1536]	; 80006e4 <triangle+0x400>
+	ldr r1,[r2]							@; ..
+ 80000e4:	6811      	ldr	r1, [r2, #0]
+	add r1,#1							@; ..
+ 80000e6:	f101 0101 	add.w	r1, r1, #1
+	str r1,[r2]							@; ..
+ 80000ea:	6011      	str	r1, [r2, #0]
+	
+	ands r1,#1							@;which pattern (ramp or square)
+ 80000ec:	f011 0101 	ands.w	r1, r1, #1
+	beq 6f								@;	even values of PINGPONG count -- do ramp
+ 80000f0:	d006      	beq.n	8000100 <DMA1Stream5int_svc+0x7c>
+
+5:	@;here to update buffer0 source address to that of squarewave +step
+	adr r1,DMADEMO_PINGBUF1				@;first of two buffers which supply the data to be written to DAC1
+ 80000f2:	a14c      	add	r1, pc, #304	; (adr r1, 8000224 <DMADEMO_PINGBUF1>)
+	MOV_imm32 r2,absDMA1_S5M0AR			@;first buffer where DMA1 will get its data
+ 80000f4:	f246 0294 	movw	r2, #24724	; 0x6094
+ 80000f8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+	str r1,[r2]
+ 80000fc:	6011      	str	r1, [r2, #0]
+	b 9f
+ 80000fe:	e06e      	b.n	80001de <pong_end+0xe>
+	
+6:	@;here to update buffer0 source address to that of triangle +ramp
+	adr r1,DMADEMO_PINGBUF0				@;first of two buffers which supply the data to be written to DAC1
+ 8000100:	a138      	add	r1, pc, #224	; (adr r1, 80001e4 <DMADEMO_PINGBUF>)
+	MOV_imm32 r2,absDMA1_S5M0AR			@;first buffer where DMA1 will get its data
+ 8000102:	f246 0294 	movw	r2, #24724	; 0x6094
+ 8000106:	f2c4 0202 	movt	r2, #16386	; 0x4002
+	str r1,[r2]
+ 800010a:	6011      	str	r1, [r2, #0]
+	b 9f
+ 800010c:	e067      	b.n	80001de <pong_end+0xe>
+	
+1: 	@;here when it's buffer 1's turn to have its address updated (ok because buffer0 is currently being used by DMA)
+
+	@;debug -- count number of times we update 'pong' buffer
+	ldr r2,=PONG_count					@;update count of number of switches between DMA buffers which have occurred
+ 800010e:	f8df 25dc 	ldr.w	r2, [pc, #1500]	; 80006ec <triangle+0x408>
+	ldr r1,[r2]							@; ..
+ 8000112:	6811      	ldr	r1, [r2, #0]
+	add r1,#1							@; ..
+ 8000114:	f101 0101 	add.w	r1, r1, #1
+	str r1,[r2]							@; ..
+ 8000118:	6011      	str	r1, [r2, #0]
+
+	@; use PINGPONG_count to determine which wave-shape to use (square or triangle)
+	ldr r2,=PINGPONG_count				@;
+ 800011a:	f8df 25c8 	ldr.w	r2, [pc, #1480]	; 80006e4 <triangle+0x400>
+	ldr r1,[r2]							@; ..
+ 800011e:	6811      	ldr	r1, [r2, #0]
+	ands r1,#1							@;which pattern (ramp or square)
+ 8000120:	f011 0101 	ands.w	r1, r1, #1
+	beq 3f								@;	even values of PINGPONG count -- do ramp
+ 8000124:	d006      	beq.n	8000134 <DMA1Stream5int_svc+0xb0>
+
+2:	@;here to update buffer1 source address to that of squarewave +step
+	adr r1,DMADEMO_PONGBUF1				@;first of two buffers which supply the data to be written to DAC2
+ 8000126:	a147      	add	r1, pc, #284	; (adr r1, 8000244 <DMADEMO_PONGBUF1>)
+	MOV_imm32 r2,absDMA1_S5M1AR			@;first buffer where DMA1 will get its data
+ 8000128:	f246 0298 	movw	r2, #24728	; 0x6098
+ 800012c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+	str r1,[r2]
+ 8000130:	6011      	str	r1, [r2, #0]
+	b 9f
+ 8000132:	e054      	b.n	80001de <pong_end+0xe>
+	
+3:	@;here to update buffer1 source address to that of triangle wave -ramp
+	adr r1,DMADEMO_PONGBUF0				@;first of two buffers which supply the data to be written to DAC2
+ 8000134:	a133      	add	r1, pc, #204	; (adr r1, 8000204 <DMADEMO_PONGBUF>)
+	MOV_imm32 r2,absDMA1_S5M1AR			@;first buffer where DMA1 will get its data
+ 8000136:	f246 0298 	movw	r2, #24728	; 0x6098
+ 800013a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+	str r1,[r2]
+ 800013e:	6011      	str	r1, [r2, #0]
+	b 9f
+ 8000140:	e04d      	b.n	80001de <pong_end+0xe>
+
+08000142 <ping>:
+	
+ping:
+	@;ldr r2,=PINGPONG_count				@;
+	@;ldr r1,[r2]							@; ..
+	@;ands r3,r1,#0xF
+	ldr r5,=PINGBUF						@;prepare the PING buffer for transaction
+ 8000142:	f8df 55ac 	ldr.w	r5, [pc, #1452]	; 80006f0 <triangle+0x40c>
+	mov r6,r5
+ 8000146:	462e      	mov	r6, r5
+	
+	ldr r3,=OFFSET						@;pick up where left off
+ 8000148:	f8df 35a8 	ldr.w	r3, [pc, #1448]	; 80006f4 <triangle+0x410>
+	ldrh r2,[r3]						@; ..
+ 800014c:	881a      	ldrh	r2, [r3, #0]
+	cmp r2,#1024
+ 800014e:	f5b2 6f80 	cmp.w	r2, #1024	; 0x400
+	it ge
+ 8000152:	bfa8      	it	ge
+	subge r2,#1024
+ 8000154:	f5a2 6280 	subge.w	r2, r2, #1024	; 0x400
+	add r4,r2							@; ..	
+ 8000158:	4414      	add	r4, r2
+	
+	mov r1,#0
+ 800015a:	f04f 0100 	mov.w	r1, #0
+
+0800015e <ping_loop>:
+
+ping_loop:
+	cmp r1,#16							@; i <= 16 ? cont : kill
+ 800015e:	2910      	cmp	r1, #16
+	beq ping_end
+ 8000160:	f000 800f 	beq.w	8000182 <ping_end>
+	ldrh r0,[r4],#16						@;start filling PING with triangle data
+ 8000164:	f834 0b10 	ldrh.w	r0, [r4], #16
+	strh r0,[r5],#2						@; ..
+ 8000168:	f825 0b02 	strh.w	r0, [r5], #2
+	
+	add r2,#16							@;update offset
+ 800016c:	f102 0210 	add.w	r2, r2, #16
+	cmp r2,#1024
+ 8000170:	f5b2 6f80 	cmp.w	r2, #1024	; 0x400
+	it ge
+ 8000174:	bfa8      	it	ge
+	subge r2,#1024
+ 8000176:	f5a2 6280 	subge.w	r2, r2, #1024	; 0x400
+	add r1,#1							@;i++
+ 800017a:	f101 0101 	add.w	r1, r1, #1
+	b ping_loop
+ 800017e:	f7ff bfee 	b.w	800015e <ping_loop>
+
+08000182 <ping_end>:
+	
+ping_end:
+	str r2,[r3]							@;save OFFSET
+ 8000182:	601a      	str	r2, [r3, #0]
+	@;ldr r5,=PINGBUF						@;reload the PING address
+	MOV_imm32 r2,absDMA1_S5M0AR			@;first buffer where DMA1 will get its data
+ 8000184:	f246 0294 	movw	r2, #24724	; 0x6094
+ 8000188:	f2c4 0202 	movt	r2, #16386	; 0x4002
+	str r6,[r2]
+ 800018c:	6016      	str	r6, [r2, #0]
+	b 9f
+ 800018e:	e026      	b.n	80001de <pong_end+0xe>
+
+08000190 <pong>:
+	
+pong:
+	@;ldr r2,=PINGPONG_count				@;
+	@;ldr r1,[r2]							@; ..
+	@;ands r3,r1,#0xF
+	ldr r5,=PONGBUF						@;prepare the PING buffer for transaction
+ 8000190:	f8df 5564 	ldr.w	r5, [pc, #1380]	; 80006f8 <triangle+0x414>
+	mov r6,r5	@; copy
+ 8000194:	462e      	mov	r6, r5
+	
+	ldr r3,=OFFSET						@;pick up where left off
+ 8000196:	f8df 355c 	ldr.w	r3, [pc, #1372]	; 80006f4 <triangle+0x410>
+	ldrh r2,[r3]						@; ..
+ 800019a:	881a      	ldrh	r2, [r3, #0]
+	cmp r2,#1024
+ 800019c:	f5b2 6f80 	cmp.w	r2, #1024	; 0x400
+	it ge
+ 80001a0:	bfa8      	it	ge
+	subge r2,#1024
+ 80001a2:	f5a2 6280 	subge.w	r2, r2, #1024	; 0x400
+	add r4,r2							@; ..	
+ 80001a6:	4414      	add	r4, r2
+	
+	mov r1,#0
+ 80001a8:	f04f 0100 	mov.w	r1, #0
+
+080001ac <pong_loop>:
+
+pong_loop:
+	cmp r1,#16							@; i <= 16 ? cont : kill
+ 80001ac:	2910      	cmp	r1, #16
+	beq pong_end
+ 80001ae:	f000 800f 	beq.w	80001d0 <pong_end>
+	ldrh r0,[r4],#16						@;start filling PONG with triangle data
+ 80001b2:	f834 0b10 	ldrh.w	r0, [r4], #16
+	strh r0,[r5],#2						@; ..
+ 80001b6:	f825 0b02 	strh.w	r0, [r5], #2
+	
+	add r2,#16							@;update offset
+ 80001ba:	f102 0210 	add.w	r2, r2, #16
+	cmp r2,#1024
+ 80001be:	f5b2 6f80 	cmp.w	r2, #1024	; 0x400
+	it ge
+ 80001c2:	bfa8      	it	ge
+	subge r2,#1024
+ 80001c4:	f5a2 6280 	subge.w	r2, r2, #1024	; 0x400
+	add r1,#1							@;i++
+ 80001c8:	f101 0101 	add.w	r1, r1, #1
+	b pong_loop
+ 80001cc:	f7ff bfee 	b.w	80001ac <pong_loop>
+
+080001d0 <pong_end>:
+	
+pong_end:
+	str r2,[r3]							@;save OFFSET
+ 80001d0:	601a      	str	r2, [r3, #0]
+	@;ldr r5,=PONGBUF						@;reload the PING address
+	MOV_imm32 r2,absDMA1_S5M1AR			@;first buffer where DMA1 will get its data
+ 80001d2:	f246 0298 	movw	r2, #24728	; 0x6098
+ 80001d6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+	str r6,[r2]
+ 80001da:	6016      	str	r6, [r2, #0]
+	b 9f
+ 80001dc:	e7ff      	b.n	80001de <pong_end+0xe>
+	
+
+
+
+9:	@;here when terminal count interrupt flag TCIF was not set ==> nothing to do
+	pop {r4-r6}
+ 80001de:	bc70      	pop	{r4, r5, r6}
+	bx lr
+ 80001e0:	4770      	bx	lr
+ 80001e2:	bf00      	nop
+
+080001e4 <DMADEMO_PINGBUF>:
+ 80001e4:	01000000 	.word	0x01000000
+ 80001e8:	03000200 	.word	0x03000200
+ 80001ec:	05000400 	.word	0x05000400
+ 80001f0:	07000600 	.word	0x07000600
+ 80001f4:	09000800 	.word	0x09000800
+ 80001f8:	0b000a00 	.word	0x0b000a00
+ 80001fc:	0d000c00 	.word	0x0d000c00
+ 8000200:	0f000e00 	.word	0x0f000e00
+
+08000204 <DMADEMO_PONGBUF>:
+ 8000204:	0eff0fff 	.word	0x0eff0fff
+ 8000208:	0cff0dff 	.word	0x0cff0dff
+ 800020c:	0aff0bff 	.word	0x0aff0bff
+ 8000210:	08ff09ff 	.word	0x08ff09ff
+ 8000214:	06ff07ff 	.word	0x06ff07ff
+ 8000218:	04ff05ff 	.word	0x04ff05ff
+ 800021c:	02ff03ff 	.word	0x02ff03ff
+ 8000220:	00ff01ff 	.word	0x00ff01ff
+
+08000224 <DMADEMO_PINGBUF1>:
+	...
+ 8000234:	0fff0fff 	.word	0x0fff0fff
+ 8000238:	0fff0fff 	.word	0x0fff0fff
+ 800023c:	0fff0fff 	.word	0x0fff0fff
+ 8000240:	0fff0fff 	.word	0x0fff0fff
+
+08000244 <DMADEMO_PONGBUF1>:
+ 8000244:	0fff0fff 	.word	0x0fff0fff
+ 8000248:	0fff0fff 	.word	0x0fff0fff
+ 800024c:	0fff0fff 	.word	0x0fff0fff
+ 8000250:	0fff0fff 	.word	0x0fff0fff
+	...
+
+08000264 <TRI_UP>:
+ 8000264:	0f100f00 	.word	0x0f100f00
+ 8000268:	0f300f20 	.word	0x0f300f20
+ 800026c:	0f500f40 	.word	0x0f500f40
+ 8000270:	0f700f60 	.word	0x0f700f60
+ 8000274:	0f900f80 	.word	0x0f900f80
+ 8000278:	0fb00fa0 	.word	0x0fb00fa0
+ 800027c:	0fd00fc0 	.word	0x0fd00fc0
+ 8000280:	0ff00fe0 	.word	0x0ff00fe0
+
+08000284 <TRI_DOWN>:
+ 8000284:	0fef0fff 	.word	0x0fef0fff
+ 8000288:	0fcf0fdf 	.word	0x0fcf0fdf
+ 800028c:	0faf0fbf 	.word	0x0faf0fbf
+ 8000290:	0f8f0f9f 	.word	0x0f8f0f9f
+ 8000294:	0f6f0f7f 	.word	0x0f6f0f7f
+ 8000298:	0f4f0f5f 	.word	0x0f4f0f5f
+ 800029c:	0f2f0f3f 	.word	0x0f2f0f3f
+ 80002a0:	0f0f0f1f 	.word	0x0f0f0f1f
+
+080002a4 <SQ_DOWN>:
+ 80002a4:	0eff0fff 	.word	0x0eff0fff
+ 80002a8:	0cff0dff 	.word	0x0cff0dff
+ 80002ac:	0aff0bff 	.word	0x0aff0bff
+ 80002b0:	08ff09ff 	.word	0x08ff09ff
+ 80002b4:	06ff07ff 	.word	0x06ff07ff
+ 80002b8:	04ff05ff 	.word	0x04ff05ff
+ 80002bc:	02ff03ff 	.word	0x02ff03ff
+ 80002c0:	00ff01ff 	.word	0x00ff01ff
+
+080002c4 <SQ_UP>:
+ 80002c4:	01000000 	.word	0x01000000
+ 80002c8:	03000200 	.word	0x03000200
+ 80002cc:	05000400 	.word	0x05000400
+ 80002d0:	07000600 	.word	0x07000600
+ 80002d4:	09000800 	.word	0x09000800
+ 80002d8:	0b000a00 	.word	0x0b000a00
+ 80002dc:	0d000c00 	.word	0x0d000c00
+ 80002e0:	0f000e00 	.word	0x0f000e00
+
+080002e4 <triangle>:
+ 80002e4:	00100000 	.word	0x00100000
+ 80002e8:	00300020 	.word	0x00300020
+ 80002ec:	00500040 	.word	0x00500040
+ 80002f0:	00700060 	.word	0x00700060
+ 80002f4:	00900080 	.word	0x00900080
+ 80002f8:	00b000a0 	.word	0x00b000a0
+ 80002fc:	00d000c0 	.word	0x00d000c0
+ 8000300:	00f000e0 	.word	0x00f000e0
+ 8000304:	01100100 	.word	0x01100100
+ 8000308:	01300120 	.word	0x01300120
+ 800030c:	01500140 	.word	0x01500140
+ 8000310:	01700160 	.word	0x01700160
+ 8000314:	01900180 	.word	0x01900180
+ 8000318:	01b001a0 	.word	0x01b001a0
+ 800031c:	01d001c0 	.word	0x01d001c0
+ 8000320:	01f001e0 	.word	0x01f001e0
+ 8000324:	02100200 	.word	0x02100200
+ 8000328:	02300220 	.word	0x02300220
+ 800032c:	02500240 	.word	0x02500240
+ 8000330:	02700260 	.word	0x02700260
+ 8000334:	02900280 	.word	0x02900280
+ 8000338:	02b002a0 	.word	0x02b002a0
+ 800033c:	02d002c0 	.word	0x02d002c0
+ 8000340:	02f002e0 	.word	0x02f002e0
+ 8000344:	03100300 	.word	0x03100300
+ 8000348:	03300320 	.word	0x03300320
+ 800034c:	03500340 	.word	0x03500340
+ 8000350:	03700360 	.word	0x03700360
+ 8000354:	03900380 	.word	0x03900380
+ 8000358:	03b003a0 	.word	0x03b003a0
+ 800035c:	03d003c0 	.word	0x03d003c0
+ 8000360:	03f003e0 	.word	0x03f003e0
+ 8000364:	04100400 	.word	0x04100400
+ 8000368:	04300420 	.word	0x04300420
+ 800036c:	04500440 	.word	0x04500440
+ 8000370:	04700460 	.word	0x04700460
+ 8000374:	04900480 	.word	0x04900480
+ 8000378:	04b004a0 	.word	0x04b004a0
+ 800037c:	04d004c0 	.word	0x04d004c0
+ 8000380:	04f004e0 	.word	0x04f004e0
+ 8000384:	05100500 	.word	0x05100500
+ 8000388:	05300520 	.word	0x05300520
+ 800038c:	05500540 	.word	0x05500540
+ 8000390:	05700560 	.word	0x05700560
+ 8000394:	05900580 	.word	0x05900580
+ 8000398:	05b005a0 	.word	0x05b005a0
+ 800039c:	05d005c0 	.word	0x05d005c0
+ 80003a0:	05f005e0 	.word	0x05f005e0
+ 80003a4:	06100600 	.word	0x06100600
+ 80003a8:	06300620 	.word	0x06300620
+ 80003ac:	06500640 	.word	0x06500640
+ 80003b0:	06700660 	.word	0x06700660
+ 80003b4:	06900680 	.word	0x06900680
+ 80003b8:	06b006a0 	.word	0x06b006a0
+ 80003bc:	06d006c0 	.word	0x06d006c0
+ 80003c0:	06f006e0 	.word	0x06f006e0
+ 80003c4:	07100700 	.word	0x07100700
+ 80003c8:	07300720 	.word	0x07300720
+ 80003cc:	07500740 	.word	0x07500740
+ 80003d0:	07700760 	.word	0x07700760
+ 80003d4:	07900780 	.word	0x07900780
+ 80003d8:	07b007a0 	.word	0x07b007a0
+ 80003dc:	07d007c0 	.word	0x07d007c0
+ 80003e0:	07f007e0 	.word	0x07f007e0
+ 80003e4:	08100800 	.word	0x08100800
+ 80003e8:	08300820 	.word	0x08300820
+ 80003ec:	08500840 	.word	0x08500840
+ 80003f0:	08700860 	.word	0x08700860
+ 80003f4:	08900880 	.word	0x08900880
+ 80003f8:	08b008a0 	.word	0x08b008a0
+ 80003fc:	08d008c0 	.word	0x08d008c0
+ 8000400:	08f008e0 	.word	0x08f008e0
+ 8000404:	09100900 	.word	0x09100900
+ 8000408:	09300920 	.word	0x09300920
+ 800040c:	09500940 	.word	0x09500940
+ 8000410:	09700960 	.word	0x09700960
+ 8000414:	09900980 	.word	0x09900980
+ 8000418:	09b009a0 	.word	0x09b009a0
+ 800041c:	09d009c0 	.word	0x09d009c0
+ 8000420:	09f009e0 	.word	0x09f009e0
+ 8000424:	0a100a00 	.word	0x0a100a00
+ 8000428:	0a300a20 	.word	0x0a300a20
+ 800042c:	0a500a40 	.word	0x0a500a40
+ 8000430:	0a700a60 	.word	0x0a700a60
+ 8000434:	0a900a80 	.word	0x0a900a80
+ 8000438:	0ab00aa0 	.word	0x0ab00aa0
+ 800043c:	0ad00ac0 	.word	0x0ad00ac0
+ 8000440:	0af00ae0 	.word	0x0af00ae0
+ 8000444:	0b100b00 	.word	0x0b100b00
+ 8000448:	0b300b20 	.word	0x0b300b20
+ 800044c:	0b500b40 	.word	0x0b500b40
+ 8000450:	0b700b60 	.word	0x0b700b60
+ 8000454:	0b900b80 	.word	0x0b900b80
+ 8000458:	0bb00ba0 	.word	0x0bb00ba0
+ 800045c:	0bd00bc0 	.word	0x0bd00bc0
+ 8000460:	0bf00be0 	.word	0x0bf00be0
+ 8000464:	0c100c00 	.word	0x0c100c00
+ 8000468:	0c300c20 	.word	0x0c300c20
+ 800046c:	0c500c40 	.word	0x0c500c40
+ 8000470:	0c700c60 	.word	0x0c700c60
+ 8000474:	0c900c80 	.word	0x0c900c80
+ 8000478:	0cb00ca0 	.word	0x0cb00ca0
+ 800047c:	0cd00cc0 	.word	0x0cd00cc0
+ 8000480:	0cf00ce0 	.word	0x0cf00ce0
+ 8000484:	0d100d00 	.word	0x0d100d00
+ 8000488:	0d300d20 	.word	0x0d300d20
+ 800048c:	0d500d40 	.word	0x0d500d40
+ 8000490:	0d700d60 	.word	0x0d700d60
+ 8000494:	0d900d80 	.word	0x0d900d80
+ 8000498:	0db00da0 	.word	0x0db00da0
+ 800049c:	0dd00dc0 	.word	0x0dd00dc0
+ 80004a0:	0df00de0 	.word	0x0df00de0
+ 80004a4:	0e100e00 	.word	0x0e100e00
+ 80004a8:	0e300e20 	.word	0x0e300e20
+ 80004ac:	0e500e40 	.word	0x0e500e40
+ 80004b0:	0e700e60 	.word	0x0e700e60
+ 80004b4:	0e900e80 	.word	0x0e900e80
+ 80004b8:	0eb00ea0 	.word	0x0eb00ea0
+ 80004bc:	0ed00ec0 	.word	0x0ed00ec0
+ 80004c0:	0ef00ee0 	.word	0x0ef00ee0
+ 80004c4:	0f100f00 	.word	0x0f100f00
+ 80004c8:	0f300f20 	.word	0x0f300f20
+ 80004cc:	0f500f40 	.word	0x0f500f40
+ 80004d0:	0f700f60 	.word	0x0f700f60
+ 80004d4:	0f900f80 	.word	0x0f900f80
+ 80004d8:	0fb00fa0 	.word	0x0fb00fa0
+ 80004dc:	0fd00fc0 	.word	0x0fd00fc0
+ 80004e0:	0ff00fe0 	.word	0x0ff00fe0
+ 80004e4:	0fef0fff 	.word	0x0fef0fff
+ 80004e8:	0fcf0fdf 	.word	0x0fcf0fdf
+ 80004ec:	0faf0fbf 	.word	0x0faf0fbf
+ 80004f0:	0f8f0f9f 	.word	0x0f8f0f9f
+ 80004f4:	0f6f0f7f 	.word	0x0f6f0f7f
+ 80004f8:	0f4f0f5f 	.word	0x0f4f0f5f
+ 80004fc:	0f2f0f3f 	.word	0x0f2f0f3f
+ 8000500:	0f0f0f1f 	.word	0x0f0f0f1f
+ 8000504:	0eef0eff 	.word	0x0eef0eff
+ 8000508:	0ecf0edf 	.word	0x0ecf0edf
+ 800050c:	0eaf0ebf 	.word	0x0eaf0ebf
+ 8000510:	0e8f0e9f 	.word	0x0e8f0e9f
+ 8000514:	0e6f0e7f 	.word	0x0e6f0e7f
+ 8000518:	0e4f0e5f 	.word	0x0e4f0e5f
+ 800051c:	0e2f0e3f 	.word	0x0e2f0e3f
+ 8000520:	0e0f0e1f 	.word	0x0e0f0e1f
+ 8000524:	0def0dff 	.word	0x0def0dff
+ 8000528:	0dcf0ddf 	.word	0x0dcf0ddf
+ 800052c:	0daf0dbf 	.word	0x0daf0dbf
+ 8000530:	0d8f0d9f 	.word	0x0d8f0d9f
+ 8000534:	0d6f0d7f 	.word	0x0d6f0d7f
+ 8000538:	0d4f0d5f 	.word	0x0d4f0d5f
+ 800053c:	0d2f0d3f 	.word	0x0d2f0d3f
+ 8000540:	0d0f0d1f 	.word	0x0d0f0d1f
+ 8000544:	0cef0cff 	.word	0x0cef0cff
+ 8000548:	0ccf0cdf 	.word	0x0ccf0cdf
+ 800054c:	0caf0cbf 	.word	0x0caf0cbf
+ 8000550:	0c8f0c9f 	.word	0x0c8f0c9f
+ 8000554:	0c6f0c7f 	.word	0x0c6f0c7f
+ 8000558:	0c4f0c5f 	.word	0x0c4f0c5f
+ 800055c:	0c2f0c3f 	.word	0x0c2f0c3f
+ 8000560:	0c0f0c1f 	.word	0x0c0f0c1f
+ 8000564:	0bef0bff 	.word	0x0bef0bff
+ 8000568:	0bcf0bdf 	.word	0x0bcf0bdf
+ 800056c:	0baf0bbf 	.word	0x0baf0bbf
+ 8000570:	0b8f0b9f 	.word	0x0b8f0b9f
+ 8000574:	0b6f0b7f 	.word	0x0b6f0b7f
+ 8000578:	0b4f0b5f 	.word	0x0b4f0b5f
+ 800057c:	0b2f0b3f 	.word	0x0b2f0b3f
+ 8000580:	0b0f0b1f 	.word	0x0b0f0b1f
+ 8000584:	0aef0aff 	.word	0x0aef0aff
+ 8000588:	0acf0adf 	.word	0x0acf0adf
+ 800058c:	0aaf0abf 	.word	0x0aaf0abf
+ 8000590:	0a8f0a9f 	.word	0x0a8f0a9f
+ 8000594:	0a6f0a7f 	.word	0x0a6f0a7f
+ 8000598:	0a4f0a5f 	.word	0x0a4f0a5f
+ 800059c:	0a2f0a3f 	.word	0x0a2f0a3f
+ 80005a0:	0a0f0a1f 	.word	0x0a0f0a1f
+ 80005a4:	09ef09ff 	.word	0x09ef09ff
+ 80005a8:	09cf09df 	.word	0x09cf09df
+ 80005ac:	09af09bf 	.word	0x09af09bf
+ 80005b0:	098f099f 	.word	0x098f099f
+ 80005b4:	096f097f 	.word	0x096f097f
+ 80005b8:	094f095f 	.word	0x094f095f
+ 80005bc:	092f093f 	.word	0x092f093f
+ 80005c0:	090f091f 	.word	0x090f091f
+ 80005c4:	08ef08ff 	.word	0x08ef08ff
+ 80005c8:	08cf08df 	.word	0x08cf08df
+ 80005cc:	08af08bf 	.word	0x08af08bf
+ 80005d0:	088f089f 	.word	0x088f089f
+ 80005d4:	086f087f 	.word	0x086f087f
+ 80005d8:	084f085f 	.word	0x084f085f
+ 80005dc:	082f083f 	.word	0x082f083f
+ 80005e0:	080f081f 	.word	0x080f081f
+ 80005e4:	07ef07ff 	.word	0x07ef07ff
+ 80005e8:	07cf07df 	.word	0x07cf07df
+ 80005ec:	07af07bf 	.word	0x07af07bf
+ 80005f0:	078f079f 	.word	0x078f079f
+ 80005f4:	076f077f 	.word	0x076f077f
+ 80005f8:	074f075f 	.word	0x074f075f
+ 80005fc:	072f073f 	.word	0x072f073f
+ 8000600:	070f071f 	.word	0x070f071f
+ 8000604:	06ef06ff 	.word	0x06ef06ff
+ 8000608:	06cf06df 	.word	0x06cf06df
+ 800060c:	06af06bf 	.word	0x06af06bf
+ 8000610:	068f069f 	.word	0x068f069f
+ 8000614:	066f067f 	.word	0x066f067f
+ 8000618:	064f065f 	.word	0x064f065f
+ 800061c:	062f063f 	.word	0x062f063f
+ 8000620:	060f061f 	.word	0x060f061f
+ 8000624:	05ef05ff 	.word	0x05ef05ff
+ 8000628:	05cf05df 	.word	0x05cf05df
+ 800062c:	05af05bf 	.word	0x05af05bf
+ 8000630:	058f059f 	.word	0x058f059f
+ 8000634:	056f057f 	.word	0x056f057f
+ 8000638:	054f055f 	.word	0x054f055f
+ 800063c:	052f053f 	.word	0x052f053f
+ 8000640:	050f051f 	.word	0x050f051f
+ 8000644:	04ef04ff 	.word	0x04ef04ff
+ 8000648:	04cf04df 	.word	0x04cf04df
+ 800064c:	04af04bf 	.word	0x04af04bf
+ 8000650:	048f049f 	.word	0x048f049f
+ 8000654:	046f047f 	.word	0x046f047f
+ 8000658:	044f045f 	.word	0x044f045f
+ 800065c:	042f043f 	.word	0x042f043f
+ 8000660:	040f041f 	.word	0x040f041f
+ 8000664:	03ef03ff 	.word	0x03ef03ff
+ 8000668:	03cf03df 	.word	0x03cf03df
+ 800066c:	03af03bf 	.word	0x03af03bf
+ 8000670:	038f039f 	.word	0x038f039f
+ 8000674:	036f037f 	.word	0x036f037f
+ 8000678:	034f035f 	.word	0x034f035f
+ 800067c:	032f033f 	.word	0x032f033f
+ 8000680:	030f031f 	.word	0x030f031f
+ 8000684:	02ef02ff 	.word	0x02ef02ff
+ 8000688:	02cf02df 	.word	0x02cf02df
+ 800068c:	02af02bf 	.word	0x02af02bf
+ 8000690:	028f029f 	.word	0x028f029f
+ 8000694:	026f027f 	.word	0x026f027f
+ 8000698:	024f025f 	.word	0x024f025f
+ 800069c:	022f023f 	.word	0x022f023f
+ 80006a0:	020f021f 	.word	0x020f021f
+ 80006a4:	01ef01ff 	.word	0x01ef01ff
+ 80006a8:	01cf01df 	.word	0x01cf01df
+ 80006ac:	01af01bf 	.word	0x01af01bf
+ 80006b0:	018f019f 	.word	0x018f019f
+ 80006b4:	016f017f 	.word	0x016f017f
+ 80006b8:	014f015f 	.word	0x014f015f
+ 80006bc:	012f013f 	.word	0x012f013f
+ 80006c0:	010f011f 	.word	0x010f011f
+ 80006c4:	00ef00ff 	.word	0x00ef00ff
+ 80006c8:	00cf00df 	.word	0x00cf00df
+ 80006cc:	00af00bf 	.word	0x00af00bf
+ 80006d0:	008f009f 	.word	0x008f009f
+ 80006d4:	006f007f 	.word	0x006f007f
+ 80006d8:	004f005f 	.word	0x004f005f
+ 80006dc:	002f003f 	.word	0x002f003f
+ 80006e0:	000f001f 	.word	0x000f001f
+	TST_bit	absDMA1_HISR,locTCIF5		@;did a buffer swap occur
+	beq 9f								@;	no -- nothing to do, so go back
+	
+	adr r4,triangle						@;load triangle table
+	
+	ldr r2,=PINGPONG_count				@;update count of number of switches between DMA buffers which have occurred
+ 80006e4:	200002c4 	.word	0x200002c4
+	beq pong
+
+4:	@;here when its buffer 0's turn to have its address updated (ok because buffer1 is currently being used by DMA)
+
+	@;debug -- count number of times we update 'ping' buffer
+	ldr r2,=PING_count					@;update count of number of switches between DMA buffers which have occurred
+ 80006e8:	200002c0 	.word	0x200002c0
+	b 9f
+	
+1: 	@;here when it's buffer 1's turn to have its address updated (ok because buffer0 is currently being used by DMA)
+
+	@;debug -- count number of times we update 'pong' buffer
+	ldr r2,=PONG_count					@;update count of number of switches between DMA buffers which have occurred
+ 80006ec:	200002bc 	.word	0x200002bc
+	
+ping:
+	@;ldr r2,=PINGPONG_count				@;
+	@;ldr r1,[r2]							@; ..
+	@;ands r3,r1,#0xF
+	ldr r5,=PINGBUF						@;prepare the PING buffer for transaction
+ 80006f0:	20000070 	.word	0x20000070
+	mov r6,r5
+	
+	ldr r3,=OFFSET						@;pick up where left off
+ 80006f4:	20000270 	.word	0x20000270
+	
+pong:
+	@;ldr r2,=PINGPONG_count				@;
+	@;ldr r1,[r2]							@; ..
+	@;ands r3,r1,#0xF
+	ldr r5,=PONGBUF						@;prepare the PING buffer for transaction
+ 80006f8:	20000170 	.word	0x20000170
+
+080006fc <P24_init>:
+
+	.global P24_init
+	.thumb_func
+P24_init:
+	@; DISPLAY PINS OUT
+	PORTBIT_init 0,GPIOA_BASE,1		
+ 80006fc:	f240 0200 	movw	r2, #0
+ 8000700:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000704:	6811      	ldr	r1, [r2, #0]
+ 8000706:	f021 010c 	bic.w	r1, r1, #12
+ 800070a:	6011      	str	r1, [r2, #0]
+ 800070c:	6811      	ldr	r1, [r2, #0]
+ 800070e:	f041 0104 	orr.w	r1, r1, #4
+ 8000712:	6011      	str	r1, [r2, #0]
+ 8000714:	6851      	ldr	r1, [r2, #4]
+ 8000716:	f021 0102 	bic.w	r1, r1, #2
+ 800071a:	6051      	str	r1, [r2, #4]
+ 800071c:	6891      	ldr	r1, [r2, #8]
+ 800071e:	f021 010c 	bic.w	r1, r1, #12
+ 8000722:	6091      	str	r1, [r2, #8]
+ 8000724:	6891      	ldr	r1, [r2, #8]
+ 8000726:	f041 0108 	orr.w	r1, r1, #8
+ 800072a:	6091      	str	r1, [r2, #8]
+ 800072c:	68d1      	ldr	r1, [r2, #12]
+ 800072e:	f021 010c 	bic.w	r1, r1, #12
+ 8000732:	60d1      	str	r1, [r2, #12]
+ 8000734:	68d1      	ldr	r1, [r2, #12]
+ 8000736:	f041 0104 	orr.w	r1, r1, #4
+ 800073a:	60d1      	str	r1, [r2, #12]
+	PORTBIT_init 0,GPIOB_BASE,0
+ 800073c:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000740:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000744:	6811      	ldr	r1, [r2, #0]
+ 8000746:	f021 0103 	bic.w	r1, r1, #3
+ 800074a:	6011      	str	r1, [r2, #0]
+ 800074c:	6811      	ldr	r1, [r2, #0]
+ 800074e:	f041 0101 	orr.w	r1, r1, #1
+ 8000752:	6011      	str	r1, [r2, #0]
+ 8000754:	6851      	ldr	r1, [r2, #4]
+ 8000756:	f021 0101 	bic.w	r1, r1, #1
+ 800075a:	6051      	str	r1, [r2, #4]
+ 800075c:	6891      	ldr	r1, [r2, #8]
+ 800075e:	f021 0103 	bic.w	r1, r1, #3
+ 8000762:	6091      	str	r1, [r2, #8]
+ 8000764:	6891      	ldr	r1, [r2, #8]
+ 8000766:	f041 0102 	orr.w	r1, r1, #2
+ 800076a:	6091      	str	r1, [r2, #8]
+ 800076c:	68d1      	ldr	r1, [r2, #12]
+ 800076e:	f021 0103 	bic.w	r1, r1, #3
+ 8000772:	60d1      	str	r1, [r2, #12]
+ 8000774:	68d1      	ldr	r1, [r2, #12]
+ 8000776:	f041 0101 	orr.w	r1, r1, #1
+ 800077a:	60d1      	str	r1, [r2, #12]
+	PORTBIT_init 0,GPIOB_BASE,1
+ 800077c:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000780:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000784:	6811      	ldr	r1, [r2, #0]
+ 8000786:	f021 010c 	bic.w	r1, r1, #12
+ 800078a:	6011      	str	r1, [r2, #0]
+ 800078c:	6811      	ldr	r1, [r2, #0]
+ 800078e:	f041 0104 	orr.w	r1, r1, #4
+ 8000792:	6011      	str	r1, [r2, #0]
+ 8000794:	6851      	ldr	r1, [r2, #4]
+ 8000796:	f021 0102 	bic.w	r1, r1, #2
+ 800079a:	6051      	str	r1, [r2, #4]
+ 800079c:	6891      	ldr	r1, [r2, #8]
+ 800079e:	f021 010c 	bic.w	r1, r1, #12
+ 80007a2:	6091      	str	r1, [r2, #8]
+ 80007a4:	6891      	ldr	r1, [r2, #8]
+ 80007a6:	f041 0108 	orr.w	r1, r1, #8
+ 80007aa:	6091      	str	r1, [r2, #8]
+ 80007ac:	68d1      	ldr	r1, [r2, #12]
+ 80007ae:	f021 010c 	bic.w	r1, r1, #12
+ 80007b2:	60d1      	str	r1, [r2, #12]
+ 80007b4:	68d1      	ldr	r1, [r2, #12]
+ 80007b6:	f041 0104 	orr.w	r1, r1, #4
+ 80007ba:	60d1      	str	r1, [r2, #12]
+	PORTBIT_init 0,GPIOB_BASE,5
+ 80007bc:	f240 4200 	movw	r2, #1024	; 0x400
+ 80007c0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80007c4:	6811      	ldr	r1, [r2, #0]
+ 80007c6:	f421 6140 	bic.w	r1, r1, #3072	; 0xc00
+ 80007ca:	6011      	str	r1, [r2, #0]
+ 80007cc:	6811      	ldr	r1, [r2, #0]
+ 80007ce:	f441 6180 	orr.w	r1, r1, #1024	; 0x400
+ 80007d2:	6011      	str	r1, [r2, #0]
+ 80007d4:	6851      	ldr	r1, [r2, #4]
+ 80007d6:	f021 0120 	bic.w	r1, r1, #32
+ 80007da:	6051      	str	r1, [r2, #4]
+ 80007dc:	6891      	ldr	r1, [r2, #8]
+ 80007de:	f421 6140 	bic.w	r1, r1, #3072	; 0xc00
+ 80007e2:	6091      	str	r1, [r2, #8]
+ 80007e4:	6891      	ldr	r1, [r2, #8]
+ 80007e6:	f441 6100 	orr.w	r1, r1, #2048	; 0x800
+ 80007ea:	6091      	str	r1, [r2, #8]
+ 80007ec:	68d1      	ldr	r1, [r2, #12]
+ 80007ee:	f421 6140 	bic.w	r1, r1, #3072	; 0xc00
+ 80007f2:	60d1      	str	r1, [r2, #12]
+ 80007f4:	68d1      	ldr	r1, [r2, #12]
+ 80007f6:	f441 6180 	orr.w	r1, r1, #1024	; 0x400
+ 80007fa:	60d1      	str	r1, [r2, #12]
+	PORTBIT_init 0,GPIOB_BASE,11
+ 80007fc:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000800:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000804:	6811      	ldr	r1, [r2, #0]
+ 8000806:	f421 0140 	bic.w	r1, r1, #12582912	; 0xc00000
+ 800080a:	6011      	str	r1, [r2, #0]
+ 800080c:	6811      	ldr	r1, [r2, #0]
+ 800080e:	f441 0180 	orr.w	r1, r1, #4194304	; 0x400000
+ 8000812:	6011      	str	r1, [r2, #0]
+ 8000814:	6851      	ldr	r1, [r2, #4]
+ 8000816:	f421 6100 	bic.w	r1, r1, #2048	; 0x800
+ 800081a:	6051      	str	r1, [r2, #4]
+ 800081c:	6891      	ldr	r1, [r2, #8]
+ 800081e:	f421 0140 	bic.w	r1, r1, #12582912	; 0xc00000
+ 8000822:	6091      	str	r1, [r2, #8]
+ 8000824:	6891      	ldr	r1, [r2, #8]
+ 8000826:	f441 0100 	orr.w	r1, r1, #8388608	; 0x800000
+ 800082a:	6091      	str	r1, [r2, #8]
+ 800082c:	68d1      	ldr	r1, [r2, #12]
+ 800082e:	f421 0140 	bic.w	r1, r1, #12582912	; 0xc00000
+ 8000832:	60d1      	str	r1, [r2, #12]
+ 8000834:	68d1      	ldr	r1, [r2, #12]
+ 8000836:	f441 0180 	orr.w	r1, r1, #4194304	; 0x400000
+ 800083a:	60d1      	str	r1, [r2, #12]
+	PORTBIT_init 0,GPIOC_BASE,2
+ 800083c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000840:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000844:	6811      	ldr	r1, [r2, #0]
+ 8000846:	f021 0130 	bic.w	r1, r1, #48	; 0x30
+ 800084a:	6011      	str	r1, [r2, #0]
+ 800084c:	6811      	ldr	r1, [r2, #0]
+ 800084e:	f041 0110 	orr.w	r1, r1, #16
+ 8000852:	6011      	str	r1, [r2, #0]
+ 8000854:	6851      	ldr	r1, [r2, #4]
+ 8000856:	f021 0104 	bic.w	r1, r1, #4
+ 800085a:	6051      	str	r1, [r2, #4]
+ 800085c:	6891      	ldr	r1, [r2, #8]
+ 800085e:	f021 0130 	bic.w	r1, r1, #48	; 0x30
+ 8000862:	6091      	str	r1, [r2, #8]
+ 8000864:	6891      	ldr	r1, [r2, #8]
+ 8000866:	f041 0120 	orr.w	r1, r1, #32
+ 800086a:	6091      	str	r1, [r2, #8]
+ 800086c:	68d1      	ldr	r1, [r2, #12]
+ 800086e:	f021 0130 	bic.w	r1, r1, #48	; 0x30
+ 8000872:	60d1      	str	r1, [r2, #12]
+ 8000874:	68d1      	ldr	r1, [r2, #12]
+ 8000876:	f041 0110 	orr.w	r1, r1, #16
+ 800087a:	60d1      	str	r1, [r2, #12]
+	PORTBIT_init 0,GPIOC_BASE,4
+ 800087c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000880:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000884:	6811      	ldr	r1, [r2, #0]
+ 8000886:	f421 7140 	bic.w	r1, r1, #768	; 0x300
+ 800088a:	6011      	str	r1, [r2, #0]
+ 800088c:	6811      	ldr	r1, [r2, #0]
+ 800088e:	f441 7180 	orr.w	r1, r1, #256	; 0x100
+ 8000892:	6011      	str	r1, [r2, #0]
+ 8000894:	6851      	ldr	r1, [r2, #4]
+ 8000896:	f021 0110 	bic.w	r1, r1, #16
+ 800089a:	6051      	str	r1, [r2, #4]
+ 800089c:	6891      	ldr	r1, [r2, #8]
+ 800089e:	f421 7140 	bic.w	r1, r1, #768	; 0x300
+ 80008a2:	6091      	str	r1, [r2, #8]
+ 80008a4:	6891      	ldr	r1, [r2, #8]
+ 80008a6:	f441 7100 	orr.w	r1, r1, #512	; 0x200
+ 80008aa:	6091      	str	r1, [r2, #8]
+ 80008ac:	68d1      	ldr	r1, [r2, #12]
+ 80008ae:	f421 7140 	bic.w	r1, r1, #768	; 0x300
+ 80008b2:	60d1      	str	r1, [r2, #12]
+ 80008b4:	68d1      	ldr	r1, [r2, #12]
+ 80008b6:	f441 7180 	orr.w	r1, r1, #256	; 0x100
+ 80008ba:	60d1      	str	r1, [r2, #12]
+	PORTBIT_init 0,GPIOC_BASE,5
+ 80008bc:	f640 0200 	movw	r2, #2048	; 0x800
+ 80008c0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80008c4:	6811      	ldr	r1, [r2, #0]
+ 80008c6:	f421 6140 	bic.w	r1, r1, #3072	; 0xc00
+ 80008ca:	6011      	str	r1, [r2, #0]
+ 80008cc:	6811      	ldr	r1, [r2, #0]
+ 80008ce:	f441 6180 	orr.w	r1, r1, #1024	; 0x400
+ 80008d2:	6011      	str	r1, [r2, #0]
+ 80008d4:	6851      	ldr	r1, [r2, #4]
+ 80008d6:	f021 0120 	bic.w	r1, r1, #32
+ 80008da:	6051      	str	r1, [r2, #4]
+ 80008dc:	6891      	ldr	r1, [r2, #8]
+ 80008de:	f421 6140 	bic.w	r1, r1, #3072	; 0xc00
+ 80008e2:	6091      	str	r1, [r2, #8]
+ 80008e4:	6891      	ldr	r1, [r2, #8]
+ 80008e6:	f441 6100 	orr.w	r1, r1, #2048	; 0x800
+ 80008ea:	6091      	str	r1, [r2, #8]
+ 80008ec:	68d1      	ldr	r1, [r2, #12]
+ 80008ee:	f421 6140 	bic.w	r1, r1, #3072	; 0xc00
+ 80008f2:	60d1      	str	r1, [r2, #12]
+ 80008f4:	68d1      	ldr	r1, [r2, #12]
+ 80008f6:	f441 6180 	orr.w	r1, r1, #1024	; 0x400
+ 80008fa:	60d1      	str	r1, [r2, #12]
+	
+	@; EN/CLK OUT
+	PORTBIT_init 0,GPIOD_BASE,2
+ 80008fc:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000900:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000904:	6811      	ldr	r1, [r2, #0]
+ 8000906:	f021 0130 	bic.w	r1, r1, #48	; 0x30
+ 800090a:	6011      	str	r1, [r2, #0]
+ 800090c:	6811      	ldr	r1, [r2, #0]
+ 800090e:	f041 0110 	orr.w	r1, r1, #16
+ 8000912:	6011      	str	r1, [r2, #0]
+ 8000914:	6851      	ldr	r1, [r2, #4]
+ 8000916:	f021 0104 	bic.w	r1, r1, #4
+ 800091a:	6051      	str	r1, [r2, #4]
+ 800091c:	6891      	ldr	r1, [r2, #8]
+ 800091e:	f021 0130 	bic.w	r1, r1, #48	; 0x30
+ 8000922:	6091      	str	r1, [r2, #8]
+ 8000924:	6891      	ldr	r1, [r2, #8]
+ 8000926:	f041 0120 	orr.w	r1, r1, #32
+ 800092a:	6091      	str	r1, [r2, #8]
+ 800092c:	68d1      	ldr	r1, [r2, #12]
+ 800092e:	f021 0130 	bic.w	r1, r1, #48	; 0x30
+ 8000932:	60d1      	str	r1, [r2, #12]
+ 8000934:	68d1      	ldr	r1, [r2, #12]
+ 8000936:	f041 0110 	orr.w	r1, r1, #16
+ 800093a:	60d1      	str	r1, [r2, #12]
+	PORTBIT_init 0,GPIOC_BASE,11
+ 800093c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000940:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000944:	6811      	ldr	r1, [r2, #0]
+ 8000946:	f421 0140 	bic.w	r1, r1, #12582912	; 0xc00000
+ 800094a:	6011      	str	r1, [r2, #0]
+ 800094c:	6811      	ldr	r1, [r2, #0]
+ 800094e:	f441 0180 	orr.w	r1, r1, #4194304	; 0x400000
+ 8000952:	6011      	str	r1, [r2, #0]
+ 8000954:	6851      	ldr	r1, [r2, #4]
+ 8000956:	f421 6100 	bic.w	r1, r1, #2048	; 0x800
+ 800095a:	6051      	str	r1, [r2, #4]
+ 800095c:	6891      	ldr	r1, [r2, #8]
+ 800095e:	f421 0140 	bic.w	r1, r1, #12582912	; 0xc00000
+ 8000962:	6091      	str	r1, [r2, #8]
+ 8000964:	6891      	ldr	r1, [r2, #8]
+ 8000966:	f441 0100 	orr.w	r1, r1, #8388608	; 0x800000
+ 800096a:	6091      	str	r1, [r2, #8]
+ 800096c:	68d1      	ldr	r1, [r2, #12]
+ 800096e:	f421 0140 	bic.w	r1, r1, #12582912	; 0xc00000
+ 8000972:	60d1      	str	r1, [r2, #12]
+ 8000974:	68d1      	ldr	r1, [r2, #12]
+ 8000976:	f441 0180 	orr.w	r1, r1, #4194304	; 0x400000
+ 800097a:	60d1      	str	r1, [r2, #12]
+	PORTBIT_init 0,GPIOC_BASE,1
+ 800097c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000980:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000984:	6811      	ldr	r1, [r2, #0]
+ 8000986:	f021 010c 	bic.w	r1, r1, #12
+ 800098a:	6011      	str	r1, [r2, #0]
+ 800098c:	6811      	ldr	r1, [r2, #0]
+ 800098e:	f041 0104 	orr.w	r1, r1, #4
+ 8000992:	6011      	str	r1, [r2, #0]
+ 8000994:	6851      	ldr	r1, [r2, #4]
+ 8000996:	f021 0102 	bic.w	r1, r1, #2
+ 800099a:	6051      	str	r1, [r2, #4]
+ 800099c:	6891      	ldr	r1, [r2, #8]
+ 800099e:	f021 010c 	bic.w	r1, r1, #12
+ 80009a2:	6091      	str	r1, [r2, #8]
+ 80009a4:	6891      	ldr	r1, [r2, #8]
+ 80009a6:	f041 0108 	orr.w	r1, r1, #8
+ 80009aa:	6091      	str	r1, [r2, #8]
+ 80009ac:	68d1      	ldr	r1, [r2, #12]
+ 80009ae:	f021 010c 	bic.w	r1, r1, #12
+ 80009b2:	60d1      	str	r1, [r2, #12]
+ 80009b4:	68d1      	ldr	r1, [r2, #12]
+ 80009b6:	f041 0104 	orr.w	r1, r1, #4
+ 80009ba:	60d1      	str	r1, [r2, #12]
+	PORTBIT_init 0,GPIOB_BASE,4
+ 80009bc:	f240 4200 	movw	r2, #1024	; 0x400
+ 80009c0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80009c4:	6811      	ldr	r1, [r2, #0]
+ 80009c6:	f421 7140 	bic.w	r1, r1, #768	; 0x300
+ 80009ca:	6011      	str	r1, [r2, #0]
+ 80009cc:	6811      	ldr	r1, [r2, #0]
+ 80009ce:	f441 7180 	orr.w	r1, r1, #256	; 0x100
+ 80009d2:	6011      	str	r1, [r2, #0]
+ 80009d4:	6851      	ldr	r1, [r2, #4]
+ 80009d6:	f021 0110 	bic.w	r1, r1, #16
+ 80009da:	6051      	str	r1, [r2, #4]
+ 80009dc:	6891      	ldr	r1, [r2, #8]
+ 80009de:	f421 7140 	bic.w	r1, r1, #768	; 0x300
+ 80009e2:	6091      	str	r1, [r2, #8]
+ 80009e4:	6891      	ldr	r1, [r2, #8]
+ 80009e6:	f441 7100 	orr.w	r1, r1, #512	; 0x200
+ 80009ea:	6091      	str	r1, [r2, #8]
+ 80009ec:	68d1      	ldr	r1, [r2, #12]
+ 80009ee:	f421 7140 	bic.w	r1, r1, #768	; 0x300
+ 80009f2:	60d1      	str	r1, [r2, #12]
+ 80009f4:	68d1      	ldr	r1, [r2, #12]
+ 80009f6:	f441 7180 	orr.w	r1, r1, #256	; 0x100
+ 80009fa:	60d1      	str	r1, [r2, #12]
+	
+	@; SWITCH OUT
+	PORTBIT_init 2,GPIOA_BASE,15
+ 80009fc:	f240 0200 	movw	r2, #0
+ 8000a00:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000a04:	6811      	ldr	r1, [r2, #0]
+ 8000a06:	f021 4140 	bic.w	r1, r1, #3221225472	; 0xc0000000
+ 8000a0a:	6011      	str	r1, [r2, #0]
+ 8000a0c:	6891      	ldr	r1, [r2, #8]
+ 8000a0e:	f021 4140 	bic.w	r1, r1, #3221225472	; 0xc0000000
+ 8000a12:	6091      	str	r1, [r2, #8]
+ 8000a14:	6891      	ldr	r1, [r2, #8]
+ 8000a16:	f041 4100 	orr.w	r1, r1, #2147483648	; 0x80000000
+ 8000a1a:	6091      	str	r1, [r2, #8]
+ 8000a1c:	68d1      	ldr	r1, [r2, #12]
+ 8000a1e:	f021 4140 	bic.w	r1, r1, #3221225472	; 0xc0000000
+ 8000a22:	60d1      	str	r1, [r2, #12]
+ 8000a24:	68d1      	ldr	r1, [r2, #12]
+ 8000a26:	f041 4180 	orr.w	r1, r1, #1073741824	; 0x40000000
+ 8000a2a:	60d1      	str	r1, [r2, #12]
+	PORTBIT_init 2,GPIOC_BASE,8
+ 8000a2c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000a30:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000a34:	6811      	ldr	r1, [r2, #0]
+ 8000a36:	f421 3140 	bic.w	r1, r1, #196608	; 0x30000
+ 8000a3a:	6011      	str	r1, [r2, #0]
+ 8000a3c:	6891      	ldr	r1, [r2, #8]
+ 8000a3e:	f421 3140 	bic.w	r1, r1, #196608	; 0x30000
+ 8000a42:	6091      	str	r1, [r2, #8]
+ 8000a44:	6891      	ldr	r1, [r2, #8]
+ 8000a46:	f441 3100 	orr.w	r1, r1, #131072	; 0x20000
+ 8000a4a:	6091      	str	r1, [r2, #8]
+ 8000a4c:	68d1      	ldr	r1, [r2, #12]
+ 8000a4e:	f421 3140 	bic.w	r1, r1, #196608	; 0x30000
+ 8000a52:	60d1      	str	r1, [r2, #12]
+ 8000a54:	68d1      	ldr	r1, [r2, #12]
+ 8000a56:	f441 3180 	orr.w	r1, r1, #65536	; 0x10000
+ 8000a5a:	60d1      	str	r1, [r2, #12]
+	@;PORTBIT_init 1,GPIOD_BASE,2
+	
+	@;PORTBIT_write GPIOC_BASE,8,1
+	@;PORTBIT_write GPIOA_BASE,15,1
+	
+	bx lr
+ 8000a5c:	4770      	bx	lr
+
+08000a5e <asm_print_digit>:
+
+	.global asm_print_digit
+	.thumb_func
+asm_print_digit:
+	push {r1}
+ 8000a5e:	b402      	push	{r1}
+	
+	PORTBIT_write GPIOB_BASE,4,1			@;	01_PB4	AN_EN	-- disable anode   (active-low)
+ 8000a60:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000a64:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000a68:	f04f 0110 	mov.w	r1, #16
+ 8000a6c:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,1			@;	01_PC1	CA_EN	-- disable cathode (active-low)
+ 8000a6e:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000a72:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000a76:	f04f 0102 	mov.w	r1, #2
+ 8000a7a:	6191      	str	r1, [r2, #24]
+
+	tbh [pc,r0]
+ 8000a7c:	e8df f010 	tbh	[pc, r0, lsl #1]
+
+08000a80 <TBB_CATHODE_table>:
+ 8000a80:	00580010 	.word	0x00580010
+ 8000a84:	00e800a0 	.word	0x00e800a0
+ 8000a88:	01780130 	.word	0x01780130
+ 8000a8c:	020801c0 	.word	0x020801c0
+ 8000a90:	02980250 	.word	0x02980250
+ 8000a94:	032802e0 	.word	0x032802e0
+ 8000a98:	03b80370 	.word	0x03b80370
+ 8000a9c:	04480400 	.word	0x04480400
+
+08000aa0 <cathode_0>:
+	.hword ((cathode_E - TBB_CATHODE_table)/2)
+	.hword ((cathode_F - TBB_CATHODE_table)/2)
+
+	.thumb_func
+cathode_0:
+	CATHODE_write 0,0,0,0,0,0,1,1
+ 8000aa0:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000aa4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000aa8:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000aac:	6191      	str	r1, [r2, #24]
+ 8000aae:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000ab2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000ab6:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000aba:	6191      	str	r1, [r2, #24]
+ 8000abc:	f240 0200 	movw	r2, #0
+ 8000ac0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000ac4:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000ac8:	6191      	str	r1, [r2, #24]
+ 8000aca:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000ace:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000ad2:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000ad6:	6191      	str	r1, [r2, #24]
+ 8000ad8:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000adc:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000ae0:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 8000ae4:	6191      	str	r1, [r2, #24]
+ 8000ae6:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000aea:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000aee:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000af2:	6191      	str	r1, [r2, #24]
+ 8000af4:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000af8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000afc:	f04f 0110 	mov.w	r1, #16
+ 8000b00:	6191      	str	r1, [r2, #24]
+ 8000b02:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000b06:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000b0a:	f04f 0101 	mov.w	r1, #1
+ 8000b0e:	6191      	str	r1, [r2, #24]
+ 8000b10:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000b14:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000b18:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000b1c:	6191      	str	r1, [r2, #24]
+ 8000b1e:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000b22:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000b26:	f04f 0104 	mov.w	r1, #4
+ 8000b2a:	6191      	str	r1, [r2, #24]
+	b continue
+ 8000b2c:	f000 bc38 	b.w	80013a0 <continue>
+
+08000b30 <cathode_1>:
+
+	.thumb_func
+cathode_1:
+	CATHODE_write 1,0,0,1,1,1,1,1
+ 8000b30:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000b34:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000b38:	f04f 0120 	mov.w	r1, #32
+ 8000b3c:	6191      	str	r1, [r2, #24]
+ 8000b3e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000b42:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000b46:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000b4a:	6191      	str	r1, [r2, #24]
+ 8000b4c:	f240 0200 	movw	r2, #0
+ 8000b50:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000b54:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000b58:	6191      	str	r1, [r2, #24]
+ 8000b5a:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000b5e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000b62:	f04f 0120 	mov.w	r1, #32
+ 8000b66:	6191      	str	r1, [r2, #24]
+ 8000b68:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000b6c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000b70:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8000b74:	6191      	str	r1, [r2, #24]
+ 8000b76:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000b7a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000b7e:	f04f 0104 	mov.w	r1, #4
+ 8000b82:	6191      	str	r1, [r2, #24]
+ 8000b84:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000b88:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000b8c:	f04f 0110 	mov.w	r1, #16
+ 8000b90:	6191      	str	r1, [r2, #24]
+ 8000b92:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000b96:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000b9a:	f04f 0101 	mov.w	r1, #1
+ 8000b9e:	6191      	str	r1, [r2, #24]
+ 8000ba0:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000ba4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000ba8:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000bac:	6191      	str	r1, [r2, #24]
+ 8000bae:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000bb2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000bb6:	f04f 0104 	mov.w	r1, #4
+ 8000bba:	6191      	str	r1, [r2, #24]
+	b continue
+ 8000bbc:	f000 bbf0 	b.w	80013a0 <continue>
+
+08000bc0 <cathode_2>:
+	
+	.thumb_func
+cathode_2:
+	CATHODE_write 0,0,1,0,0,1,0,1
+ 8000bc0:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000bc4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000bc8:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000bcc:	6191      	str	r1, [r2, #24]
+ 8000bce:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000bd2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000bd6:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000bda:	6191      	str	r1, [r2, #24]
+ 8000bdc:	f240 0200 	movw	r2, #0
+ 8000be0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000be4:	f04f 0102 	mov.w	r1, #2
+ 8000be8:	6191      	str	r1, [r2, #24]
+ 8000bea:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000bee:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000bf2:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000bf6:	6191      	str	r1, [r2, #24]
+ 8000bf8:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000bfc:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000c00:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 8000c04:	6191      	str	r1, [r2, #24]
+ 8000c06:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000c0a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000c0e:	f04f 0104 	mov.w	r1, #4
+ 8000c12:	6191      	str	r1, [r2, #24]
+ 8000c14:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000c18:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000c1c:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8000c20:	6191      	str	r1, [r2, #24]
+ 8000c22:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000c26:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000c2a:	f04f 0101 	mov.w	r1, #1
+ 8000c2e:	6191      	str	r1, [r2, #24]
+ 8000c30:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000c34:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000c38:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000c3c:	6191      	str	r1, [r2, #24]
+ 8000c3e:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000c42:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000c46:	f04f 0104 	mov.w	r1, #4
+ 8000c4a:	6191      	str	r1, [r2, #24]
+	b continue
+ 8000c4c:	f000 bba8 	b.w	80013a0 <continue>
+
+08000c50 <cathode_3>:
+	
+	.thumb_func
+cathode_3:
+	CATHODE_write 0,0,0,0,1,1,0,1
+ 8000c50:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000c54:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000c58:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000c5c:	6191      	str	r1, [r2, #24]
+ 8000c5e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000c62:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000c66:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000c6a:	6191      	str	r1, [r2, #24]
+ 8000c6c:	f240 0200 	movw	r2, #0
+ 8000c70:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000c74:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000c78:	6191      	str	r1, [r2, #24]
+ 8000c7a:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000c7e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000c82:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000c86:	6191      	str	r1, [r2, #24]
+ 8000c88:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000c8c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000c90:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8000c94:	6191      	str	r1, [r2, #24]
+ 8000c96:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000c9a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000c9e:	f04f 0104 	mov.w	r1, #4
+ 8000ca2:	6191      	str	r1, [r2, #24]
+ 8000ca4:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000ca8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000cac:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8000cb0:	6191      	str	r1, [r2, #24]
+ 8000cb2:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000cb6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000cba:	f04f 0101 	mov.w	r1, #1
+ 8000cbe:	6191      	str	r1, [r2, #24]
+ 8000cc0:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000cc4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000cc8:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000ccc:	6191      	str	r1, [r2, #24]
+ 8000cce:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000cd2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000cd6:	f04f 0104 	mov.w	r1, #4
+ 8000cda:	6191      	str	r1, [r2, #24]
+	b continue
+ 8000cdc:	f000 bb60 	b.w	80013a0 <continue>
+
+08000ce0 <cathode_4>:
+	
+	.thumb_func
+cathode_4:
+	CATHODE_write 1,0,0,1,1,0,0,1
+ 8000ce0:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000ce4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000ce8:	f04f 0120 	mov.w	r1, #32
+ 8000cec:	6191      	str	r1, [r2, #24]
+ 8000cee:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000cf2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000cf6:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000cfa:	6191      	str	r1, [r2, #24]
+ 8000cfc:	f240 0200 	movw	r2, #0
+ 8000d00:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000d04:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000d08:	6191      	str	r1, [r2, #24]
+ 8000d0a:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000d0e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000d12:	f04f 0120 	mov.w	r1, #32
+ 8000d16:	6191      	str	r1, [r2, #24]
+ 8000d18:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000d1c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000d20:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8000d24:	6191      	str	r1, [r2, #24]
+ 8000d26:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000d2a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000d2e:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000d32:	6191      	str	r1, [r2, #24]
+ 8000d34:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000d38:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000d3c:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8000d40:	6191      	str	r1, [r2, #24]
+ 8000d42:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000d46:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000d4a:	f04f 0101 	mov.w	r1, #1
+ 8000d4e:	6191      	str	r1, [r2, #24]
+ 8000d50:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000d54:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000d58:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000d5c:	6191      	str	r1, [r2, #24]
+ 8000d5e:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000d62:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000d66:	f04f 0104 	mov.w	r1, #4
+ 8000d6a:	6191      	str	r1, [r2, #24]
+	b continue
+ 8000d6c:	f000 bb18 	b.w	80013a0 <continue>
+
+08000d70 <cathode_5>:
+	
+	.thumb_func
+cathode_5:
+	CATHODE_write 0,1,0,0,1,0,0,1
+ 8000d70:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000d74:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000d78:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000d7c:	6191      	str	r1, [r2, #24]
+ 8000d7e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000d82:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000d86:	f04f 0102 	mov.w	r1, #2
+ 8000d8a:	6191      	str	r1, [r2, #24]
+ 8000d8c:	f240 0200 	movw	r2, #0
+ 8000d90:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000d94:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000d98:	6191      	str	r1, [r2, #24]
+ 8000d9a:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000d9e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000da2:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000da6:	6191      	str	r1, [r2, #24]
+ 8000da8:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000dac:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000db0:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8000db4:	6191      	str	r1, [r2, #24]
+ 8000db6:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000dba:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000dbe:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000dc2:	6191      	str	r1, [r2, #24]
+ 8000dc4:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000dc8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000dcc:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8000dd0:	6191      	str	r1, [r2, #24]
+ 8000dd2:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000dd6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000dda:	f04f 0101 	mov.w	r1, #1
+ 8000dde:	6191      	str	r1, [r2, #24]
+ 8000de0:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000de4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000de8:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000dec:	6191      	str	r1, [r2, #24]
+ 8000dee:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000df2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000df6:	f04f 0104 	mov.w	r1, #4
+ 8000dfa:	6191      	str	r1, [r2, #24]
+	b continue
+ 8000dfc:	f000 bad0 	b.w	80013a0 <continue>
+
+08000e00 <cathode_6>:
+
+	.thumb_func
+cathode_6:
+	CATHODE_write 0,1,0,0,0,0,0,1
+ 8000e00:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000e04:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000e08:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000e0c:	6191      	str	r1, [r2, #24]
+ 8000e0e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000e12:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000e16:	f04f 0102 	mov.w	r1, #2
+ 8000e1a:	6191      	str	r1, [r2, #24]
+ 8000e1c:	f240 0200 	movw	r2, #0
+ 8000e20:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000e24:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000e28:	6191      	str	r1, [r2, #24]
+ 8000e2a:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000e2e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000e32:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000e36:	6191      	str	r1, [r2, #24]
+ 8000e38:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000e3c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000e40:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 8000e44:	6191      	str	r1, [r2, #24]
+ 8000e46:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000e4a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000e4e:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000e52:	6191      	str	r1, [r2, #24]
+ 8000e54:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000e58:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000e5c:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8000e60:	6191      	str	r1, [r2, #24]
+ 8000e62:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000e66:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000e6a:	f04f 0101 	mov.w	r1, #1
+ 8000e6e:	6191      	str	r1, [r2, #24]
+ 8000e70:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000e74:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000e78:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000e7c:	6191      	str	r1, [r2, #24]
+ 8000e7e:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000e82:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000e86:	f04f 0104 	mov.w	r1, #4
+ 8000e8a:	6191      	str	r1, [r2, #24]
+	b continue
+ 8000e8c:	f000 ba88 	b.w	80013a0 <continue>
+
+08000e90 <cathode_7>:
+	
+	.thumb_func
+cathode_7:
+	CATHODE_write 0,0,0,1,1,1,1,1
+ 8000e90:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000e94:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000e98:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000e9c:	6191      	str	r1, [r2, #24]
+ 8000e9e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000ea2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000ea6:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000eaa:	6191      	str	r1, [r2, #24]
+ 8000eac:	f240 0200 	movw	r2, #0
+ 8000eb0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000eb4:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000eb8:	6191      	str	r1, [r2, #24]
+ 8000eba:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000ebe:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000ec2:	f04f 0120 	mov.w	r1, #32
+ 8000ec6:	6191      	str	r1, [r2, #24]
+ 8000ec8:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000ecc:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000ed0:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8000ed4:	6191      	str	r1, [r2, #24]
+ 8000ed6:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000eda:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000ede:	f04f 0104 	mov.w	r1, #4
+ 8000ee2:	6191      	str	r1, [r2, #24]
+ 8000ee4:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000ee8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000eec:	f04f 0110 	mov.w	r1, #16
+ 8000ef0:	6191      	str	r1, [r2, #24]
+ 8000ef2:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000ef6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000efa:	f04f 0101 	mov.w	r1, #1
+ 8000efe:	6191      	str	r1, [r2, #24]
+ 8000f00:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000f04:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000f08:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000f0c:	6191      	str	r1, [r2, #24]
+ 8000f0e:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000f12:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000f16:	f04f 0104 	mov.w	r1, #4
+ 8000f1a:	6191      	str	r1, [r2, #24]
+	b continue
+ 8000f1c:	f000 ba40 	b.w	80013a0 <continue>
+
+08000f20 <cathode_8>:
+	
+	.thumb_func
+cathode_8:
+	CATHODE_write 0,0,0,0,0,0,0,1
+ 8000f20:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000f24:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000f28:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000f2c:	6191      	str	r1, [r2, #24]
+ 8000f2e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000f32:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000f36:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000f3a:	6191      	str	r1, [r2, #24]
+ 8000f3c:	f240 0200 	movw	r2, #0
+ 8000f40:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000f44:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000f48:	6191      	str	r1, [r2, #24]
+ 8000f4a:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000f4e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000f52:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000f56:	6191      	str	r1, [r2, #24]
+ 8000f58:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000f5c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000f60:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 8000f64:	6191      	str	r1, [r2, #24]
+ 8000f66:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000f6a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000f6e:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000f72:	6191      	str	r1, [r2, #24]
+ 8000f74:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000f78:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000f7c:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8000f80:	6191      	str	r1, [r2, #24]
+ 8000f82:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000f86:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000f8a:	f04f 0101 	mov.w	r1, #1
+ 8000f8e:	6191      	str	r1, [r2, #24]
+ 8000f90:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000f94:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000f98:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8000f9c:	6191      	str	r1, [r2, #24]
+ 8000f9e:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8000fa2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000fa6:	f04f 0104 	mov.w	r1, #4
+ 8000faa:	6191      	str	r1, [r2, #24]
+	b continue
+ 8000fac:	f000 b9f8 	b.w	80013a0 <continue>
+
+08000fb0 <cathode_9>:
+	
+	.thumb_func
+cathode_9:
+	CATHODE_write 0,0,0,1,1,0,0,1
+ 8000fb0:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000fb4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000fb8:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8000fbc:	6191      	str	r1, [r2, #24]
+ 8000fbe:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000fc2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000fc6:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000fca:	6191      	str	r1, [r2, #24]
+ 8000fcc:	f240 0200 	movw	r2, #0
+ 8000fd0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000fd4:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8000fd8:	6191      	str	r1, [r2, #24]
+ 8000fda:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000fde:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000fe2:	f04f 0120 	mov.w	r1, #32
+ 8000fe6:	6191      	str	r1, [r2, #24]
+ 8000fe8:	f240 4200 	movw	r2, #1024	; 0x400
+ 8000fec:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000ff0:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8000ff4:	6191      	str	r1, [r2, #24]
+ 8000ff6:	f640 0200 	movw	r2, #2048	; 0x800
+ 8000ffa:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8000ffe:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001002:	6191      	str	r1, [r2, #24]
+ 8001004:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001008:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800100c:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8001010:	6191      	str	r1, [r2, #24]
+ 8001012:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001016:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800101a:	f04f 0101 	mov.w	r1, #1
+ 800101e:	6191      	str	r1, [r2, #24]
+ 8001020:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001024:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001028:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 800102c:	6191      	str	r1, [r2, #24]
+ 800102e:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001032:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001036:	f04f 0104 	mov.w	r1, #4
+ 800103a:	6191      	str	r1, [r2, #24]
+	b continue
+ 800103c:	f000 b9b0 	b.w	80013a0 <continue>
+
+08001040 <cathode_A>:
+	
+	.thumb_func
+cathode_A:
+	CATHODE_write 0,0,0,1,0,0,0,1
+ 8001040:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001044:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001048:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 800104c:	6191      	str	r1, [r2, #24]
+ 800104e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001052:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001056:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 800105a:	6191      	str	r1, [r2, #24]
+ 800105c:	f240 0200 	movw	r2, #0
+ 8001060:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001064:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001068:	6191      	str	r1, [r2, #24]
+ 800106a:	f240 4200 	movw	r2, #1024	; 0x400
+ 800106e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001072:	f04f 0120 	mov.w	r1, #32
+ 8001076:	6191      	str	r1, [r2, #24]
+ 8001078:	f240 4200 	movw	r2, #1024	; 0x400
+ 800107c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001080:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 8001084:	6191      	str	r1, [r2, #24]
+ 8001086:	f640 0200 	movw	r2, #2048	; 0x800
+ 800108a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800108e:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001092:	6191      	str	r1, [r2, #24]
+ 8001094:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001098:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800109c:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 80010a0:	6191      	str	r1, [r2, #24]
+ 80010a2:	f240 4200 	movw	r2, #1024	; 0x400
+ 80010a6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80010aa:	f04f 0101 	mov.w	r1, #1
+ 80010ae:	6191      	str	r1, [r2, #24]
+ 80010b0:	f640 4200 	movw	r2, #3072	; 0xc00
+ 80010b4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80010b8:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 80010bc:	6191      	str	r1, [r2, #24]
+ 80010be:	f640 4200 	movw	r2, #3072	; 0xc00
+ 80010c2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80010c6:	f04f 0104 	mov.w	r1, #4
+ 80010ca:	6191      	str	r1, [r2, #24]
+	b continue
+ 80010cc:	f000 b968 	b.w	80013a0 <continue>
+
+080010d0 <cathode_B>:
+
+	.thumb_func
+cathode_B:
+	CATHODE_write 1,1,0,0,0,0,0,1
+ 80010d0:	f640 0200 	movw	r2, #2048	; 0x800
+ 80010d4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80010d8:	f04f 0120 	mov.w	r1, #32
+ 80010dc:	6191      	str	r1, [r2, #24]
+ 80010de:	f240 4200 	movw	r2, #1024	; 0x400
+ 80010e2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80010e6:	f04f 0102 	mov.w	r1, #2
+ 80010ea:	6191      	str	r1, [r2, #24]
+ 80010ec:	f240 0200 	movw	r2, #0
+ 80010f0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80010f4:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 80010f8:	6191      	str	r1, [r2, #24]
+ 80010fa:	f240 4200 	movw	r2, #1024	; 0x400
+ 80010fe:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001102:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8001106:	6191      	str	r1, [r2, #24]
+ 8001108:	f240 4200 	movw	r2, #1024	; 0x400
+ 800110c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001110:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 8001114:	6191      	str	r1, [r2, #24]
+ 8001116:	f640 0200 	movw	r2, #2048	; 0x800
+ 800111a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800111e:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001122:	6191      	str	r1, [r2, #24]
+ 8001124:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001128:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800112c:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8001130:	6191      	str	r1, [r2, #24]
+ 8001132:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001136:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800113a:	f04f 0101 	mov.w	r1, #1
+ 800113e:	6191      	str	r1, [r2, #24]
+ 8001140:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001144:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001148:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 800114c:	6191      	str	r1, [r2, #24]
+ 800114e:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001152:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001156:	f04f 0104 	mov.w	r1, #4
+ 800115a:	6191      	str	r1, [r2, #24]
+	b continue
+ 800115c:	f000 b920 	b.w	80013a0 <continue>
+
+08001160 <cathode_C>:
+	
+	.thumb_func
+cathode_C:
+	CATHODE_write 0,1,1,0,0,0,1,1
+ 8001160:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001164:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001168:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 800116c:	6191      	str	r1, [r2, #24]
+ 800116e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001172:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001176:	f04f 0102 	mov.w	r1, #2
+ 800117a:	6191      	str	r1, [r2, #24]
+ 800117c:	f240 0200 	movw	r2, #0
+ 8001180:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001184:	f04f 0102 	mov.w	r1, #2
+ 8001188:	6191      	str	r1, [r2, #24]
+ 800118a:	f240 4200 	movw	r2, #1024	; 0x400
+ 800118e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001192:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8001196:	6191      	str	r1, [r2, #24]
+ 8001198:	f240 4200 	movw	r2, #1024	; 0x400
+ 800119c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80011a0:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 80011a4:	6191      	str	r1, [r2, #24]
+ 80011a6:	f640 0200 	movw	r2, #2048	; 0x800
+ 80011aa:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80011ae:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 80011b2:	6191      	str	r1, [r2, #24]
+ 80011b4:	f640 0200 	movw	r2, #2048	; 0x800
+ 80011b8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80011bc:	f04f 0110 	mov.w	r1, #16
+ 80011c0:	6191      	str	r1, [r2, #24]
+ 80011c2:	f240 4200 	movw	r2, #1024	; 0x400
+ 80011c6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80011ca:	f04f 0101 	mov.w	r1, #1
+ 80011ce:	6191      	str	r1, [r2, #24]
+ 80011d0:	f640 4200 	movw	r2, #3072	; 0xc00
+ 80011d4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80011d8:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 80011dc:	6191      	str	r1, [r2, #24]
+ 80011de:	f640 4200 	movw	r2, #3072	; 0xc00
+ 80011e2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80011e6:	f04f 0104 	mov.w	r1, #4
+ 80011ea:	6191      	str	r1, [r2, #24]
+	b continue
+ 80011ec:	f000 b8d8 	b.w	80013a0 <continue>
+
+080011f0 <cathode_D>:
+	
+	.thumb_func
+cathode_D:
+	CATHODE_write 1,0,0,0,0,1,0,1
+ 80011f0:	f640 0200 	movw	r2, #2048	; 0x800
+ 80011f4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80011f8:	f04f 0120 	mov.w	r1, #32
+ 80011fc:	6191      	str	r1, [r2, #24]
+ 80011fe:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001202:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001206:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 800120a:	6191      	str	r1, [r2, #24]
+ 800120c:	f240 0200 	movw	r2, #0
+ 8001210:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001214:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001218:	6191      	str	r1, [r2, #24]
+ 800121a:	f240 4200 	movw	r2, #1024	; 0x400
+ 800121e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001222:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8001226:	6191      	str	r1, [r2, #24]
+ 8001228:	f240 4200 	movw	r2, #1024	; 0x400
+ 800122c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001230:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 8001234:	6191      	str	r1, [r2, #24]
+ 8001236:	f640 0200 	movw	r2, #2048	; 0x800
+ 800123a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800123e:	f04f 0104 	mov.w	r1, #4
+ 8001242:	6191      	str	r1, [r2, #24]
+ 8001244:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001248:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800124c:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8001250:	6191      	str	r1, [r2, #24]
+ 8001252:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001256:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800125a:	f04f 0101 	mov.w	r1, #1
+ 800125e:	6191      	str	r1, [r2, #24]
+ 8001260:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001264:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001268:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 800126c:	6191      	str	r1, [r2, #24]
+ 800126e:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001272:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001276:	f04f 0104 	mov.w	r1, #4
+ 800127a:	6191      	str	r1, [r2, #24]
+	b continue
+ 800127c:	f000 b890 	b.w	80013a0 <continue>
+
+08001280 <cathode_E>:
+	
+	.thumb_func
+cathode_E:
+	CATHODE_write 0,1,1,0,0,0,0,1
+ 8001280:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001284:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001288:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 800128c:	6191      	str	r1, [r2, #24]
+ 800128e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001292:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001296:	f04f 0102 	mov.w	r1, #2
+ 800129a:	6191      	str	r1, [r2, #24]
+ 800129c:	f240 0200 	movw	r2, #0
+ 80012a0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80012a4:	f04f 0102 	mov.w	r1, #2
+ 80012a8:	6191      	str	r1, [r2, #24]
+ 80012aa:	f240 4200 	movw	r2, #1024	; 0x400
+ 80012ae:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80012b2:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 80012b6:	6191      	str	r1, [r2, #24]
+ 80012b8:	f240 4200 	movw	r2, #1024	; 0x400
+ 80012bc:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80012c0:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 80012c4:	6191      	str	r1, [r2, #24]
+ 80012c6:	f640 0200 	movw	r2, #2048	; 0x800
+ 80012ca:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80012ce:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 80012d2:	6191      	str	r1, [r2, #24]
+ 80012d4:	f640 0200 	movw	r2, #2048	; 0x800
+ 80012d8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80012dc:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 80012e0:	6191      	str	r1, [r2, #24]
+ 80012e2:	f240 4200 	movw	r2, #1024	; 0x400
+ 80012e6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80012ea:	f04f 0101 	mov.w	r1, #1
+ 80012ee:	6191      	str	r1, [r2, #24]
+ 80012f0:	f640 4200 	movw	r2, #3072	; 0xc00
+ 80012f4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80012f8:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 80012fc:	6191      	str	r1, [r2, #24]
+ 80012fe:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001302:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001306:	f04f 0104 	mov.w	r1, #4
+ 800130a:	6191      	str	r1, [r2, #24]
+	b continue
+ 800130c:	f000 b848 	b.w	80013a0 <continue>
+
+08001310 <cathode_F>:
+	
+	.thumb_func
+cathode_F:
+	CATHODE_write 0,1,1,1,0,0,0,1
+ 8001310:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001314:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001318:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 800131c:	6191      	str	r1, [r2, #24]
+ 800131e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001322:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001326:	f04f 0102 	mov.w	r1, #2
+ 800132a:	6191      	str	r1, [r2, #24]
+ 800132c:	f240 0200 	movw	r2, #0
+ 8001330:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001334:	f04f 0102 	mov.w	r1, #2
+ 8001338:	6191      	str	r1, [r2, #24]
+ 800133a:	f240 4200 	movw	r2, #1024	; 0x400
+ 800133e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001342:	f04f 0120 	mov.w	r1, #32
+ 8001346:	6191      	str	r1, [r2, #24]
+ 8001348:	f240 4200 	movw	r2, #1024	; 0x400
+ 800134c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001350:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 8001354:	6191      	str	r1, [r2, #24]
+ 8001356:	f640 0200 	movw	r2, #2048	; 0x800
+ 800135a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800135e:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001362:	6191      	str	r1, [r2, #24]
+ 8001364:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001368:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800136c:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8001370:	6191      	str	r1, [r2, #24]
+ 8001372:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001376:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800137a:	f04f 0101 	mov.w	r1, #1
+ 800137e:	6191      	str	r1, [r2, #24]
+ 8001380:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001384:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001388:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 800138c:	6191      	str	r1, [r2, #24]
+ 800138e:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001392:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001396:	f04f 0104 	mov.w	r1, #4
+ 800139a:	6191      	str	r1, [r2, #24]
+	b continue
+ 800139c:	f000 b800 	b.w	80013a0 <continue>
+
+080013a0 <continue>:
+	
+
+continue:
+	pop {r1}
+ 80013a0:	bc02      	pop	{r1}
+	tbh [pc,r1]
+ 80013a2:	e8df f011 	tbh	[pc, r1, lsl #1]
+
+080013a6 <TBB_ANODE_table>:
+ 80013a6:	0005      	.short	0x0005
+ 80013a8:	0095004d 	.word	0x0095004d
+ 80013ac:	012500dd 	.word	0x012500dd
+
+080013b0 <anode_COLON>:
+	.hword ((anode_DIGIT3 - TBB_ANODE_table)/2)
+	.hword ((anode_DIGIT4 - TBB_ANODE_table)/2)
+
+	.thumb_func
+anode_COLON:
+	ANODE_write 1,1,1,1,1,1,1,0
+ 80013b0:	f240 4200 	movw	r2, #1024	; 0x400
+ 80013b4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80013b8:	f04f 0120 	mov.w	r1, #32
+ 80013bc:	6191      	str	r1, [r2, #24]
+ 80013be:	f240 4200 	movw	r2, #1024	; 0x400
+ 80013c2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80013c6:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 80013ca:	6191      	str	r1, [r2, #24]
+ 80013cc:	f240 4200 	movw	r2, #1024	; 0x400
+ 80013d0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80013d4:	f04f 0101 	mov.w	r1, #1
+ 80013d8:	6191      	str	r1, [r2, #24]
+ 80013da:	f240 4200 	movw	r2, #1024	; 0x400
+ 80013de:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80013e2:	f04f 0102 	mov.w	r1, #2
+ 80013e6:	6191      	str	r1, [r2, #24]
+ 80013e8:	f640 0200 	movw	r2, #2048	; 0x800
+ 80013ec:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80013f0:	f04f 0110 	mov.w	r1, #16
+ 80013f4:	6191      	str	r1, [r2, #24]
+ 80013f6:	f240 0200 	movw	r2, #0
+ 80013fa:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80013fe:	f04f 0102 	mov.w	r1, #2
+ 8001402:	6191      	str	r1, [r2, #24]
+ 8001404:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001408:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800140c:	f04f 0104 	mov.w	r1, #4
+ 8001410:	6191      	str	r1, [r2, #24]
+ 8001412:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001416:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800141a:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 800141e:	6191      	str	r1, [r2, #24]
+ 8001420:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001424:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001428:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 800142c:	6191      	str	r1, [r2, #24]
+ 800142e:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001432:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001436:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 800143a:	6191      	str	r1, [r2, #24]
+	b prt_end
+ 800143c:	f000 b920 	b.w	8001680 <prt_end>
+
+08001440 <anode_DIGIT1>:
+	
+	.thumb_func
+anode_DIGIT1:
+	ANODE_write 1,1,1,1,1,1,0,1
+ 8001440:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001444:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001448:	f04f 0120 	mov.w	r1, #32
+ 800144c:	6191      	str	r1, [r2, #24]
+ 800144e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001452:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001456:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 800145a:	6191      	str	r1, [r2, #24]
+ 800145c:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001460:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001464:	f04f 0101 	mov.w	r1, #1
+ 8001468:	6191      	str	r1, [r2, #24]
+ 800146a:	f240 4200 	movw	r2, #1024	; 0x400
+ 800146e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001472:	f04f 0102 	mov.w	r1, #2
+ 8001476:	6191      	str	r1, [r2, #24]
+ 8001478:	f640 0200 	movw	r2, #2048	; 0x800
+ 800147c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001480:	f04f 0110 	mov.w	r1, #16
+ 8001484:	6191      	str	r1, [r2, #24]
+ 8001486:	f240 0200 	movw	r2, #0
+ 800148a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800148e:	f04f 0102 	mov.w	r1, #2
+ 8001492:	6191      	str	r1, [r2, #24]
+ 8001494:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001498:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800149c:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 80014a0:	6191      	str	r1, [r2, #24]
+ 80014a2:	f640 0200 	movw	r2, #2048	; 0x800
+ 80014a6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80014aa:	f04f 0120 	mov.w	r1, #32
+ 80014ae:	6191      	str	r1, [r2, #24]
+ 80014b0:	f640 0200 	movw	r2, #2048	; 0x800
+ 80014b4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80014b8:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 80014bc:	6191      	str	r1, [r2, #24]
+ 80014be:	f640 0200 	movw	r2, #2048	; 0x800
+ 80014c2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80014c6:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 80014ca:	6191      	str	r1, [r2, #24]
+	b prt_end
+ 80014cc:	f000 b8d8 	b.w	8001680 <prt_end>
+
+080014d0 <anode_DIGIT2>:
+	
+	.thumb_func
+anode_DIGIT2:
+	ANODE_write 1,1,1,1,1,0,1,1
+ 80014d0:	f240 4200 	movw	r2, #1024	; 0x400
+ 80014d4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80014d8:	f04f 0120 	mov.w	r1, #32
+ 80014dc:	6191      	str	r1, [r2, #24]
+ 80014de:	f240 4200 	movw	r2, #1024	; 0x400
+ 80014e2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80014e6:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 80014ea:	6191      	str	r1, [r2, #24]
+ 80014ec:	f240 4200 	movw	r2, #1024	; 0x400
+ 80014f0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80014f4:	f04f 0101 	mov.w	r1, #1
+ 80014f8:	6191      	str	r1, [r2, #24]
+ 80014fa:	f240 4200 	movw	r2, #1024	; 0x400
+ 80014fe:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001502:	f04f 0102 	mov.w	r1, #2
+ 8001506:	6191      	str	r1, [r2, #24]
+ 8001508:	f640 0200 	movw	r2, #2048	; 0x800
+ 800150c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001510:	f04f 0110 	mov.w	r1, #16
+ 8001514:	6191      	str	r1, [r2, #24]
+ 8001516:	f240 0200 	movw	r2, #0
+ 800151a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800151e:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001522:	6191      	str	r1, [r2, #24]
+ 8001524:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001528:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800152c:	f04f 0104 	mov.w	r1, #4
+ 8001530:	6191      	str	r1, [r2, #24]
+ 8001532:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001536:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800153a:	f04f 0120 	mov.w	r1, #32
+ 800153e:	6191      	str	r1, [r2, #24]
+ 8001540:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001544:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001548:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 800154c:	6191      	str	r1, [r2, #24]
+ 800154e:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001552:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001556:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 800155a:	6191      	str	r1, [r2, #24]
+	b prt_end
+ 800155c:	f000 b890 	b.w	8001680 <prt_end>
+
+08001560 <anode_DIGIT3>:
+	
+	.thumb_func
+anode_DIGIT3:
+	ANODE_write 1,1,1,1,0,1,1,1
+ 8001560:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001564:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001568:	f04f 0120 	mov.w	r1, #32
+ 800156c:	6191      	str	r1, [r2, #24]
+ 800156e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001572:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001576:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 800157a:	6191      	str	r1, [r2, #24]
+ 800157c:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001580:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001584:	f04f 0101 	mov.w	r1, #1
+ 8001588:	6191      	str	r1, [r2, #24]
+ 800158a:	f240 4200 	movw	r2, #1024	; 0x400
+ 800158e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001592:	f04f 0102 	mov.w	r1, #2
+ 8001596:	6191      	str	r1, [r2, #24]
+ 8001598:	f640 0200 	movw	r2, #2048	; 0x800
+ 800159c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80015a0:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 80015a4:	6191      	str	r1, [r2, #24]
+ 80015a6:	f240 0200 	movw	r2, #0
+ 80015aa:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80015ae:	f04f 0102 	mov.w	r1, #2
+ 80015b2:	6191      	str	r1, [r2, #24]
+ 80015b4:	f640 0200 	movw	r2, #2048	; 0x800
+ 80015b8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80015bc:	f04f 0104 	mov.w	r1, #4
+ 80015c0:	6191      	str	r1, [r2, #24]
+ 80015c2:	f640 0200 	movw	r2, #2048	; 0x800
+ 80015c6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80015ca:	f04f 0120 	mov.w	r1, #32
+ 80015ce:	6191      	str	r1, [r2, #24]
+ 80015d0:	f640 0200 	movw	r2, #2048	; 0x800
+ 80015d4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80015d8:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 80015dc:	6191      	str	r1, [r2, #24]
+ 80015de:	f640 0200 	movw	r2, #2048	; 0x800
+ 80015e2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80015e6:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 80015ea:	6191      	str	r1, [r2, #24]
+	b prt_end
+ 80015ec:	f000 b848 	b.w	8001680 <prt_end>
+
+080015f0 <anode_DIGIT4>:
+	
+	.thumb_func
+anode_DIGIT4:
+	ANODE_write 1,1,1,0,1,1,1,1
+ 80015f0:	f240 4200 	movw	r2, #1024	; 0x400
+ 80015f4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80015f8:	f04f 0120 	mov.w	r1, #32
+ 80015fc:	6191      	str	r1, [r2, #24]
+ 80015fe:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001602:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001606:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 800160a:	6191      	str	r1, [r2, #24]
+ 800160c:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001610:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001614:	f04f 0101 	mov.w	r1, #1
+ 8001618:	6191      	str	r1, [r2, #24]
+ 800161a:	f240 4200 	movw	r2, #1024	; 0x400
+ 800161e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001622:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001626:	6191      	str	r1, [r2, #24]
+ 8001628:	f640 0200 	movw	r2, #2048	; 0x800
+ 800162c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001630:	f04f 0110 	mov.w	r1, #16
+ 8001634:	6191      	str	r1, [r2, #24]
+ 8001636:	f240 0200 	movw	r2, #0
+ 800163a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800163e:	f04f 0102 	mov.w	r1, #2
+ 8001642:	6191      	str	r1, [r2, #24]
+ 8001644:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001648:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800164c:	f04f 0104 	mov.w	r1, #4
+ 8001650:	6191      	str	r1, [r2, #24]
+ 8001652:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001656:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800165a:	f04f 0120 	mov.w	r1, #32
+ 800165e:	6191      	str	r1, [r2, #24]
+ 8001660:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001664:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001668:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 800166c:	6191      	str	r1, [r2, #24]
+ 800166e:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001672:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001676:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 800167a:	6191      	str	r1, [r2, #24]
+	b prt_end
+ 800167c:	f000 b800 	b.w	8001680 <prt_end>
+
+08001680 <prt_end>:
+
+prt_end: 
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 8001680:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001684:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001688:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 800168c:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOB_BASE,4,0			@;	01_PB4	AN_EN	-- enable anode   (active-low)
+ 800168e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001692:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001696:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 800169a:	6191      	str	r1, [r2, #24]
+	@;b get_switch_pcont
+	bx lr
+ 800169c:	4770      	bx	lr
+
+0800169e <asm_set_switch>:
+	@;.thumb_func
+asm_set_switch:
+
+	@;push {r0}
+
+	PORTBIT_write GPIOC_BASE,1,1			@;	01_PC1	CA_EN	-- disable cathode (active-low)
+ 800169e:	f640 0200 	movw	r2, #2048	; 0x800
+ 80016a2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80016a6:	f04f 0102 	mov.w	r1, #2
+ 80016aa:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOB_BASE,4,1			@;	01_PB4	AN_EN	-- disable anode   (active-low)
+ 80016ac:	f240 4200 	movw	r2, #1024	; 0x400
+ 80016b0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80016b4:	f04f 0110 	mov.w	r1, #16
+ 80016b8:	6191      	str	r1, [r2, #24]
+
+	@;pop {r0}
+	tbh [pc,r0]
+ 80016ba:	e8df f010 	tbh	[pc, r0, lsl #1]
+
+080016be <TBB_SWITCH_table>:
+ 80016be:	000d      	.short	0x000d
+ 80016c0:	00d90073 	.word	0x00d90073
+ 80016c4:	01a5013f 	.word	0x01a5013f
+ 80016c8:	0271020b 	.word	0x0271020b
+ 80016cc:	033d02d7 	.word	0x033d02d7
+ 80016d0:	040903a3 	.word	0x040903a3
+ 80016d4:	04d5046f 	.word	0x04d5046f
+
+080016d8 <switch_1>:
+	.hword ((switch_C - TBB_SWITCH_table)/2)
+	.hword ((switch_D - TBB_SWITCH_table)/2)
+	
+	.thumb_func
+switch_1:
+	CATHODE_write 1,1,1,0,1,1,1,1
+ 80016d8:	f640 0200 	movw	r2, #2048	; 0x800
+ 80016dc:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80016e0:	f04f 0120 	mov.w	r1, #32
+ 80016e4:	6191      	str	r1, [r2, #24]
+ 80016e6:	f240 4200 	movw	r2, #1024	; 0x400
+ 80016ea:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80016ee:	f04f 0102 	mov.w	r1, #2
+ 80016f2:	6191      	str	r1, [r2, #24]
+ 80016f4:	f240 0200 	movw	r2, #0
+ 80016f8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80016fc:	f04f 0102 	mov.w	r1, #2
+ 8001700:	6191      	str	r1, [r2, #24]
+ 8001702:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001706:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800170a:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 800170e:	6191      	str	r1, [r2, #24]
+ 8001710:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001714:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001718:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 800171c:	6191      	str	r1, [r2, #24]
+ 800171e:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001722:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001726:	f04f 0104 	mov.w	r1, #4
+ 800172a:	6191      	str	r1, [r2, #24]
+ 800172c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001730:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001734:	f04f 0110 	mov.w	r1, #16
+ 8001738:	6191      	str	r1, [r2, #24]
+ 800173a:	f240 4200 	movw	r2, #1024	; 0x400
+ 800173e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001742:	f04f 0101 	mov.w	r1, #1
+ 8001746:	6191      	str	r1, [r2, #24]
+ 8001748:	f640 4200 	movw	r2, #3072	; 0xc00
+ 800174c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001750:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001754:	6191      	str	r1, [r2, #24]
+ 8001756:	f640 4200 	movw	r2, #3072	; 0xc00
+ 800175a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800175e:	f04f 0104 	mov.w	r1, #4
+ 8001762:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 8001764:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001768:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800176c:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001770:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOB_BASE,5,GPIOA_BASE,15
+ 8001772:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001776:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800177a:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 800177e:	6191      	str	r1, [r2, #24]
+ 8001780:	f240 0200 	movw	r2, #0
+ 8001784:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001788:	6910      	ldr	r0, [r2, #16]
+ 800178a:	f410 4000 	ands.w	r0, r0, #32768	; 0x8000
+ 800178e:	ea4f 30d0 	mov.w	r0, r0, lsr #15
+ 8001792:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001796:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800179a:	f04f 0120 	mov.w	r1, #32
+ 800179e:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 80017a0:	f000 bcc8 	b.w	8002134 <sw_end>
+
+080017a4 <switch_2>:
+	
+	.thumb_func
+switch_2:
+	CATHODE_write 1,1,1,0,1,1,1,1
+ 80017a4:	f640 0200 	movw	r2, #2048	; 0x800
+ 80017a8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80017ac:	f04f 0120 	mov.w	r1, #32
+ 80017b0:	6191      	str	r1, [r2, #24]
+ 80017b2:	f240 4200 	movw	r2, #1024	; 0x400
+ 80017b6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80017ba:	f04f 0102 	mov.w	r1, #2
+ 80017be:	6191      	str	r1, [r2, #24]
+ 80017c0:	f240 0200 	movw	r2, #0
+ 80017c4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80017c8:	f04f 0102 	mov.w	r1, #2
+ 80017cc:	6191      	str	r1, [r2, #24]
+ 80017ce:	f240 4200 	movw	r2, #1024	; 0x400
+ 80017d2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80017d6:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 80017da:	6191      	str	r1, [r2, #24]
+ 80017dc:	f240 4200 	movw	r2, #1024	; 0x400
+ 80017e0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80017e4:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 80017e8:	6191      	str	r1, [r2, #24]
+ 80017ea:	f640 0200 	movw	r2, #2048	; 0x800
+ 80017ee:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80017f2:	f04f 0104 	mov.w	r1, #4
+ 80017f6:	6191      	str	r1, [r2, #24]
+ 80017f8:	f640 0200 	movw	r2, #2048	; 0x800
+ 80017fc:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001800:	f04f 0110 	mov.w	r1, #16
+ 8001804:	6191      	str	r1, [r2, #24]
+ 8001806:	f240 4200 	movw	r2, #1024	; 0x400
+ 800180a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800180e:	f04f 0101 	mov.w	r1, #1
+ 8001812:	6191      	str	r1, [r2, #24]
+ 8001814:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001818:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800181c:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001820:	6191      	str	r1, [r2, #24]
+ 8001822:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001826:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800182a:	f04f 0104 	mov.w	r1, #4
+ 800182e:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 8001830:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001834:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001838:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 800183c:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOB_BASE,5,GPIOC_BASE,8
+ 800183e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001842:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001846:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 800184a:	6191      	str	r1, [r2, #24]
+ 800184c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001850:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001854:	6910      	ldr	r0, [r2, #16]
+ 8001856:	f410 7080 	ands.w	r0, r0, #256	; 0x100
+ 800185a:	ea4f 2010 	mov.w	r0, r0, lsr #8
+ 800185e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001862:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001866:	f04f 0120 	mov.w	r1, #32
+ 800186a:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 800186c:	f000 bc62 	b.w	8002134 <sw_end>
+
+08001870 <switch_3>:
+	
+	.thumb_func
+switch_3:
+	CATHODE_write 1,1,1,1,0,1,1,1
+ 8001870:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001874:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001878:	f04f 0120 	mov.w	r1, #32
+ 800187c:	6191      	str	r1, [r2, #24]
+ 800187e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001882:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001886:	f04f 0102 	mov.w	r1, #2
+ 800188a:	6191      	str	r1, [r2, #24]
+ 800188c:	f240 0200 	movw	r2, #0
+ 8001890:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001894:	f04f 0102 	mov.w	r1, #2
+ 8001898:	6191      	str	r1, [r2, #24]
+ 800189a:	f240 4200 	movw	r2, #1024	; 0x400
+ 800189e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80018a2:	f04f 0120 	mov.w	r1, #32
+ 80018a6:	6191      	str	r1, [r2, #24]
+ 80018a8:	f240 4200 	movw	r2, #1024	; 0x400
+ 80018ac:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80018b0:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 80018b4:	6191      	str	r1, [r2, #24]
+ 80018b6:	f640 0200 	movw	r2, #2048	; 0x800
+ 80018ba:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80018be:	f04f 0104 	mov.w	r1, #4
+ 80018c2:	6191      	str	r1, [r2, #24]
+ 80018c4:	f640 0200 	movw	r2, #2048	; 0x800
+ 80018c8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80018cc:	f04f 0110 	mov.w	r1, #16
+ 80018d0:	6191      	str	r1, [r2, #24]
+ 80018d2:	f240 4200 	movw	r2, #1024	; 0x400
+ 80018d6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80018da:	f04f 0101 	mov.w	r1, #1
+ 80018de:	6191      	str	r1, [r2, #24]
+ 80018e0:	f640 4200 	movw	r2, #3072	; 0xc00
+ 80018e4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80018e8:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 80018ec:	6191      	str	r1, [r2, #24]
+ 80018ee:	f640 4200 	movw	r2, #3072	; 0xc00
+ 80018f2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80018f6:	f04f 0104 	mov.w	r1, #4
+ 80018fa:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 80018fc:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001900:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001904:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001908:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOB_BASE,11,GPIOA_BASE,15
+ 800190a:	f240 4200 	movw	r2, #1024	; 0x400
+ 800190e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001912:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 8001916:	6191      	str	r1, [r2, #24]
+ 8001918:	f240 0200 	movw	r2, #0
+ 800191c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001920:	6910      	ldr	r0, [r2, #16]
+ 8001922:	f410 4000 	ands.w	r0, r0, #32768	; 0x8000
+ 8001926:	ea4f 30d0 	mov.w	r0, r0, lsr #15
+ 800192a:	f240 4200 	movw	r2, #1024	; 0x400
+ 800192e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001932:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8001936:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 8001938:	f000 bbfc 	b.w	8002134 <sw_end>
+
+0800193c <switch_4>:
+	
+	.thumb_func
+switch_4:
+	CATHODE_write 1,1,1,1,0,1,1,1
+ 800193c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001940:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001944:	f04f 0120 	mov.w	r1, #32
+ 8001948:	6191      	str	r1, [r2, #24]
+ 800194a:	f240 4200 	movw	r2, #1024	; 0x400
+ 800194e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001952:	f04f 0102 	mov.w	r1, #2
+ 8001956:	6191      	str	r1, [r2, #24]
+ 8001958:	f240 0200 	movw	r2, #0
+ 800195c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001960:	f04f 0102 	mov.w	r1, #2
+ 8001964:	6191      	str	r1, [r2, #24]
+ 8001966:	f240 4200 	movw	r2, #1024	; 0x400
+ 800196a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800196e:	f04f 0120 	mov.w	r1, #32
+ 8001972:	6191      	str	r1, [r2, #24]
+ 8001974:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001978:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800197c:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 8001980:	6191      	str	r1, [r2, #24]
+ 8001982:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001986:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800198a:	f04f 0104 	mov.w	r1, #4
+ 800198e:	6191      	str	r1, [r2, #24]
+ 8001990:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001994:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001998:	f04f 0110 	mov.w	r1, #16
+ 800199c:	6191      	str	r1, [r2, #24]
+ 800199e:	f240 4200 	movw	r2, #1024	; 0x400
+ 80019a2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80019a6:	f04f 0101 	mov.w	r1, #1
+ 80019aa:	6191      	str	r1, [r2, #24]
+ 80019ac:	f640 4200 	movw	r2, #3072	; 0xc00
+ 80019b0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80019b4:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 80019b8:	6191      	str	r1, [r2, #24]
+ 80019ba:	f640 4200 	movw	r2, #3072	; 0xc00
+ 80019be:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80019c2:	f04f 0104 	mov.w	r1, #4
+ 80019c6:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 80019c8:	f640 0200 	movw	r2, #2048	; 0x800
+ 80019cc:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80019d0:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 80019d4:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOB_BASE,11,GPIOC_BASE,8
+ 80019d6:	f240 4200 	movw	r2, #1024	; 0x400
+ 80019da:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80019de:	f04f 6100 	mov.w	r1, #134217728	; 0x8000000
+ 80019e2:	6191      	str	r1, [r2, #24]
+ 80019e4:	f640 0200 	movw	r2, #2048	; 0x800
+ 80019e8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80019ec:	6910      	ldr	r0, [r2, #16]
+ 80019ee:	f410 7080 	ands.w	r0, r0, #256	; 0x100
+ 80019f2:	ea4f 2010 	mov.w	r0, r0, lsr #8
+ 80019f6:	f240 4200 	movw	r2, #1024	; 0x400
+ 80019fa:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80019fe:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8001a02:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 8001a04:	f000 bb96 	b.w	8002134 <sw_end>
+
+08001a08 <switch_5>:
+	
+	.thumb_func
+switch_5:
+	CATHODE_write 1,1,1,1,1,1,1,0
+ 8001a08:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001a0c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001a10:	f04f 0120 	mov.w	r1, #32
+ 8001a14:	6191      	str	r1, [r2, #24]
+ 8001a16:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001a1a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001a1e:	f04f 0102 	mov.w	r1, #2
+ 8001a22:	6191      	str	r1, [r2, #24]
+ 8001a24:	f240 0200 	movw	r2, #0
+ 8001a28:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001a2c:	f04f 0102 	mov.w	r1, #2
+ 8001a30:	6191      	str	r1, [r2, #24]
+ 8001a32:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001a36:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001a3a:	f04f 0120 	mov.w	r1, #32
+ 8001a3e:	6191      	str	r1, [r2, #24]
+ 8001a40:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001a44:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001a48:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8001a4c:	6191      	str	r1, [r2, #24]
+ 8001a4e:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001a52:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001a56:	f04f 0104 	mov.w	r1, #4
+ 8001a5a:	6191      	str	r1, [r2, #24]
+ 8001a5c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001a60:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001a64:	f04f 0110 	mov.w	r1, #16
+ 8001a68:	6191      	str	r1, [r2, #24]
+ 8001a6a:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001a6e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001a72:	f44f 3180 	mov.w	r1, #65536	; 0x10000
+ 8001a76:	6191      	str	r1, [r2, #24]
+ 8001a78:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001a7c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001a80:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001a84:	6191      	str	r1, [r2, #24]
+ 8001a86:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001a8a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001a8e:	f04f 0104 	mov.w	r1, #4
+ 8001a92:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 8001a94:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001a98:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001a9c:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001aa0:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOB_BASE,0,GPIOA_BASE,15
+ 8001aa2:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001aa6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001aaa:	f44f 3180 	mov.w	r1, #65536	; 0x10000
+ 8001aae:	6191      	str	r1, [r2, #24]
+ 8001ab0:	f240 0200 	movw	r2, #0
+ 8001ab4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001ab8:	6910      	ldr	r0, [r2, #16]
+ 8001aba:	f410 4000 	ands.w	r0, r0, #32768	; 0x8000
+ 8001abe:	ea4f 30d0 	mov.w	r0, r0, lsr #15
+ 8001ac2:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001ac6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001aca:	f04f 0101 	mov.w	r1, #1
+ 8001ace:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 8001ad0:	f000 bb30 	b.w	8002134 <sw_end>
+
+08001ad4 <switch_6>:
+	
+	.thumb_func
+switch_6:
+	CATHODE_write 1,1,1,1,1,1,1,0
+ 8001ad4:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001ad8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001adc:	f04f 0120 	mov.w	r1, #32
+ 8001ae0:	6191      	str	r1, [r2, #24]
+ 8001ae2:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001ae6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001aea:	f04f 0102 	mov.w	r1, #2
+ 8001aee:	6191      	str	r1, [r2, #24]
+ 8001af0:	f240 0200 	movw	r2, #0
+ 8001af4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001af8:	f04f 0102 	mov.w	r1, #2
+ 8001afc:	6191      	str	r1, [r2, #24]
+ 8001afe:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001b02:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001b06:	f04f 0120 	mov.w	r1, #32
+ 8001b0a:	6191      	str	r1, [r2, #24]
+ 8001b0c:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001b10:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001b14:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8001b18:	6191      	str	r1, [r2, #24]
+ 8001b1a:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001b1e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001b22:	f04f 0104 	mov.w	r1, #4
+ 8001b26:	6191      	str	r1, [r2, #24]
+ 8001b28:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001b2c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001b30:	f04f 0110 	mov.w	r1, #16
+ 8001b34:	6191      	str	r1, [r2, #24]
+ 8001b36:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001b3a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001b3e:	f44f 3180 	mov.w	r1, #65536	; 0x10000
+ 8001b42:	6191      	str	r1, [r2, #24]
+ 8001b44:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001b48:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001b4c:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001b50:	6191      	str	r1, [r2, #24]
+ 8001b52:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001b56:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001b5a:	f04f 0104 	mov.w	r1, #4
+ 8001b5e:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 8001b60:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001b64:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001b68:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001b6c:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOB_BASE,0,GPIOC_BASE,8
+ 8001b6e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001b72:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001b76:	f44f 3180 	mov.w	r1, #65536	; 0x10000
+ 8001b7a:	6191      	str	r1, [r2, #24]
+ 8001b7c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001b80:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001b84:	6910      	ldr	r0, [r2, #16]
+ 8001b86:	f410 7080 	ands.w	r0, r0, #256	; 0x100
+ 8001b8a:	ea4f 2010 	mov.w	r0, r0, lsr #8
+ 8001b8e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001b92:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001b96:	f04f 0101 	mov.w	r1, #1
+ 8001b9a:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 8001b9c:	f000 baca 	b.w	8002134 <sw_end>
+
+08001ba0 <switch_7>:
+	
+	.thumb_func
+switch_7:
+	CATHODE_write 1,0,1,1,1,1,1,1
+ 8001ba0:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001ba4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001ba8:	f04f 0120 	mov.w	r1, #32
+ 8001bac:	6191      	str	r1, [r2, #24]
+ 8001bae:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001bb2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001bb6:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001bba:	6191      	str	r1, [r2, #24]
+ 8001bbc:	f240 0200 	movw	r2, #0
+ 8001bc0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001bc4:	f04f 0102 	mov.w	r1, #2
+ 8001bc8:	6191      	str	r1, [r2, #24]
+ 8001bca:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001bce:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001bd2:	f04f 0120 	mov.w	r1, #32
+ 8001bd6:	6191      	str	r1, [r2, #24]
+ 8001bd8:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001bdc:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001be0:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8001be4:	6191      	str	r1, [r2, #24]
+ 8001be6:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001bea:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001bee:	f04f 0104 	mov.w	r1, #4
+ 8001bf2:	6191      	str	r1, [r2, #24]
+ 8001bf4:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001bf8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001bfc:	f04f 0110 	mov.w	r1, #16
+ 8001c00:	6191      	str	r1, [r2, #24]
+ 8001c02:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001c06:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001c0a:	f04f 0101 	mov.w	r1, #1
+ 8001c0e:	6191      	str	r1, [r2, #24]
+ 8001c10:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001c14:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001c18:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001c1c:	6191      	str	r1, [r2, #24]
+ 8001c1e:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001c22:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001c26:	f04f 0104 	mov.w	r1, #4
+ 8001c2a:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 8001c2c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001c30:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001c34:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001c38:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOB_BASE,1,GPIOA_BASE,15
+ 8001c3a:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001c3e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001c42:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001c46:	6191      	str	r1, [r2, #24]
+ 8001c48:	f240 0200 	movw	r2, #0
+ 8001c4c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001c50:	6910      	ldr	r0, [r2, #16]
+ 8001c52:	f410 4000 	ands.w	r0, r0, #32768	; 0x8000
+ 8001c56:	ea4f 30d0 	mov.w	r0, r0, lsr #15
+ 8001c5a:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001c5e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001c62:	f04f 0102 	mov.w	r1, #2
+ 8001c66:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 8001c68:	f000 ba64 	b.w	8002134 <sw_end>
+
+08001c6c <switch_8>:
+	
+	.thumb_func
+switch_8:
+	CATHODE_write 1,0,1,1,1,1,1,1
+ 8001c6c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001c70:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001c74:	f04f 0120 	mov.w	r1, #32
+ 8001c78:	6191      	str	r1, [r2, #24]
+ 8001c7a:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001c7e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001c82:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001c86:	6191      	str	r1, [r2, #24]
+ 8001c88:	f240 0200 	movw	r2, #0
+ 8001c8c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001c90:	f04f 0102 	mov.w	r1, #2
+ 8001c94:	6191      	str	r1, [r2, #24]
+ 8001c96:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001c9a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001c9e:	f04f 0120 	mov.w	r1, #32
+ 8001ca2:	6191      	str	r1, [r2, #24]
+ 8001ca4:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001ca8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001cac:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8001cb0:	6191      	str	r1, [r2, #24]
+ 8001cb2:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001cb6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001cba:	f04f 0104 	mov.w	r1, #4
+ 8001cbe:	6191      	str	r1, [r2, #24]
+ 8001cc0:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001cc4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001cc8:	f04f 0110 	mov.w	r1, #16
+ 8001ccc:	6191      	str	r1, [r2, #24]
+ 8001cce:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001cd2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001cd6:	f04f 0101 	mov.w	r1, #1
+ 8001cda:	6191      	str	r1, [r2, #24]
+ 8001cdc:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001ce0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001ce4:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001ce8:	6191      	str	r1, [r2, #24]
+ 8001cea:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001cee:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001cf2:	f04f 0104 	mov.w	r1, #4
+ 8001cf6:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 8001cf8:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001cfc:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001d00:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001d04:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOB_BASE,1,GPIOC_BASE,8
+ 8001d06:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001d0a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001d0e:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001d12:	6191      	str	r1, [r2, #24]
+ 8001d14:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001d18:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001d1c:	6910      	ldr	r0, [r2, #16]
+ 8001d1e:	f410 7080 	ands.w	r0, r0, #256	; 0x100
+ 8001d22:	ea4f 2010 	mov.w	r0, r0, lsr #8
+ 8001d26:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001d2a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001d2e:	f04f 0102 	mov.w	r1, #2
+ 8001d32:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 8001d34:	f000 b9fe 	b.w	8002134 <sw_end>
+
+08001d38 <switch_9>:
+	
+	.thumb_func
+switch_9:
+	CATHODE_write 1,1,1,1,1,1,0,1
+ 8001d38:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001d3c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001d40:	f04f 0120 	mov.w	r1, #32
+ 8001d44:	6191      	str	r1, [r2, #24]
+ 8001d46:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001d4a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001d4e:	f04f 0102 	mov.w	r1, #2
+ 8001d52:	6191      	str	r1, [r2, #24]
+ 8001d54:	f240 0200 	movw	r2, #0
+ 8001d58:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001d5c:	f04f 0102 	mov.w	r1, #2
+ 8001d60:	6191      	str	r1, [r2, #24]
+ 8001d62:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001d66:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001d6a:	f04f 0120 	mov.w	r1, #32
+ 8001d6e:	6191      	str	r1, [r2, #24]
+ 8001d70:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001d74:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001d78:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8001d7c:	6191      	str	r1, [r2, #24]
+ 8001d7e:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001d82:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001d86:	f04f 0104 	mov.w	r1, #4
+ 8001d8a:	6191      	str	r1, [r2, #24]
+ 8001d8c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001d90:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001d94:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8001d98:	6191      	str	r1, [r2, #24]
+ 8001d9a:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001d9e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001da2:	f04f 0101 	mov.w	r1, #1
+ 8001da6:	6191      	str	r1, [r2, #24]
+ 8001da8:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001dac:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001db0:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001db4:	6191      	str	r1, [r2, #24]
+ 8001db6:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001dba:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001dbe:	f04f 0104 	mov.w	r1, #4
+ 8001dc2:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 8001dc4:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001dc8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001dcc:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001dd0:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOC_BASE,4,GPIOA_BASE,15
+ 8001dd2:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001dd6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001dda:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8001dde:	6191      	str	r1, [r2, #24]
+ 8001de0:	f240 0200 	movw	r2, #0
+ 8001de4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001de8:	6910      	ldr	r0, [r2, #16]
+ 8001dea:	f410 4000 	ands.w	r0, r0, #32768	; 0x8000
+ 8001dee:	ea4f 30d0 	mov.w	r0, r0, lsr #15
+ 8001df2:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001df6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001dfa:	f04f 0110 	mov.w	r1, #16
+ 8001dfe:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 8001e00:	f000 b998 	b.w	8002134 <sw_end>
+
+08001e04 <switch_A>:
+	
+	.thumb_func
+switch_A:
+	CATHODE_write 1,1,1,1,1,1,0,1
+ 8001e04:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001e08:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001e0c:	f04f 0120 	mov.w	r1, #32
+ 8001e10:	6191      	str	r1, [r2, #24]
+ 8001e12:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001e16:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001e1a:	f04f 0102 	mov.w	r1, #2
+ 8001e1e:	6191      	str	r1, [r2, #24]
+ 8001e20:	f240 0200 	movw	r2, #0
+ 8001e24:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001e28:	f04f 0102 	mov.w	r1, #2
+ 8001e2c:	6191      	str	r1, [r2, #24]
+ 8001e2e:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001e32:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001e36:	f04f 0120 	mov.w	r1, #32
+ 8001e3a:	6191      	str	r1, [r2, #24]
+ 8001e3c:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001e40:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001e44:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8001e48:	6191      	str	r1, [r2, #24]
+ 8001e4a:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001e4e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001e52:	f04f 0104 	mov.w	r1, #4
+ 8001e56:	6191      	str	r1, [r2, #24]
+ 8001e58:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001e5c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001e60:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8001e64:	6191      	str	r1, [r2, #24]
+ 8001e66:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001e6a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001e6e:	f04f 0101 	mov.w	r1, #1
+ 8001e72:	6191      	str	r1, [r2, #24]
+ 8001e74:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001e78:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001e7c:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001e80:	6191      	str	r1, [r2, #24]
+ 8001e82:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001e86:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001e8a:	f04f 0104 	mov.w	r1, #4
+ 8001e8e:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 8001e90:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001e94:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001e98:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001e9c:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOC_BASE,4,GPIOC_BASE,8
+ 8001e9e:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001ea2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001ea6:	f44f 1180 	mov.w	r1, #1048576	; 0x100000
+ 8001eaa:	6191      	str	r1, [r2, #24]
+ 8001eac:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001eb0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001eb4:	6910      	ldr	r0, [r2, #16]
+ 8001eb6:	f410 7080 	ands.w	r0, r0, #256	; 0x100
+ 8001eba:	ea4f 2010 	mov.w	r0, r0, lsr #8
+ 8001ebe:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001ec2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001ec6:	f04f 0110 	mov.w	r1, #16
+ 8001eca:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 8001ecc:	f000 b932 	b.w	8002134 <sw_end>
+
+08001ed0 <switch_B>:
+	
+	.thumb_func
+switch_B:
+	CATHODE_write 0,1,1,1,1,1,1,1
+ 8001ed0:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001ed4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001ed8:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8001edc:	6191      	str	r1, [r2, #24]
+ 8001ede:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001ee2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001ee6:	f04f 0102 	mov.w	r1, #2
+ 8001eea:	6191      	str	r1, [r2, #24]
+ 8001eec:	f240 0200 	movw	r2, #0
+ 8001ef0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001ef4:	f04f 0102 	mov.w	r1, #2
+ 8001ef8:	6191      	str	r1, [r2, #24]
+ 8001efa:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001efe:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001f02:	f04f 0120 	mov.w	r1, #32
+ 8001f06:	6191      	str	r1, [r2, #24]
+ 8001f08:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001f0c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001f10:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8001f14:	6191      	str	r1, [r2, #24]
+ 8001f16:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001f1a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001f1e:	f04f 0104 	mov.w	r1, #4
+ 8001f22:	6191      	str	r1, [r2, #24]
+ 8001f24:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001f28:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001f2c:	f04f 0110 	mov.w	r1, #16
+ 8001f30:	6191      	str	r1, [r2, #24]
+ 8001f32:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001f36:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001f3a:	f04f 0101 	mov.w	r1, #1
+ 8001f3e:	6191      	str	r1, [r2, #24]
+ 8001f40:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001f44:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001f48:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8001f4c:	6191      	str	r1, [r2, #24]
+ 8001f4e:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8001f52:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001f56:	f04f 0104 	mov.w	r1, #4
+ 8001f5a:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 8001f5c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001f60:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001f64:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8001f68:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOC_BASE,5,GPIOA_BASE,15
+ 8001f6a:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001f6e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001f72:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8001f76:	6191      	str	r1, [r2, #24]
+ 8001f78:	f240 0200 	movw	r2, #0
+ 8001f7c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001f80:	6910      	ldr	r0, [r2, #16]
+ 8001f82:	f410 4000 	ands.w	r0, r0, #32768	; 0x8000
+ 8001f86:	ea4f 30d0 	mov.w	r0, r0, lsr #15
+ 8001f8a:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001f8e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001f92:	f04f 0120 	mov.w	r1, #32
+ 8001f96:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 8001f98:	f000 b8cc 	b.w	8002134 <sw_end>
+
+08001f9c <switch_C>:
+	
+	.thumb_func
+switch_C:
+	CATHODE_write 0,1,1,1,1,1,1,1
+ 8001f9c:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001fa0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001fa4:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8001fa8:	6191      	str	r1, [r2, #24]
+ 8001faa:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001fae:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001fb2:	f04f 0102 	mov.w	r1, #2
+ 8001fb6:	6191      	str	r1, [r2, #24]
+ 8001fb8:	f240 0200 	movw	r2, #0
+ 8001fbc:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001fc0:	f04f 0102 	mov.w	r1, #2
+ 8001fc4:	6191      	str	r1, [r2, #24]
+ 8001fc6:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001fca:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001fce:	f04f 0120 	mov.w	r1, #32
+ 8001fd2:	6191      	str	r1, [r2, #24]
+ 8001fd4:	f240 4200 	movw	r2, #1024	; 0x400
+ 8001fd8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001fdc:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 8001fe0:	6191      	str	r1, [r2, #24]
+ 8001fe2:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001fe6:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001fea:	f04f 0104 	mov.w	r1, #4
+ 8001fee:	6191      	str	r1, [r2, #24]
+ 8001ff0:	f640 0200 	movw	r2, #2048	; 0x800
+ 8001ff4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8001ff8:	f04f 0110 	mov.w	r1, #16
+ 8001ffc:	6191      	str	r1, [r2, #24]
+ 8001ffe:	f240 4200 	movw	r2, #1024	; 0x400
+ 8002002:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8002006:	f04f 0101 	mov.w	r1, #1
+ 800200a:	6191      	str	r1, [r2, #24]
+ 800200c:	f640 4200 	movw	r2, #3072	; 0xc00
+ 8002010:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8002014:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 8002018:	6191      	str	r1, [r2, #24]
+ 800201a:	f640 4200 	movw	r2, #3072	; 0xc00
+ 800201e:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8002022:	f04f 0104 	mov.w	r1, #4
+ 8002026:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 8002028:	f640 0200 	movw	r2, #2048	; 0x800
+ 800202c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8002030:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8002034:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOC_BASE,5,GPIOC_BASE,8
+ 8002036:	f640 0200 	movw	r2, #2048	; 0x800
+ 800203a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800203e:	f44f 1100 	mov.w	r1, #2097152	; 0x200000
+ 8002042:	6191      	str	r1, [r2, #24]
+ 8002044:	f640 0200 	movw	r2, #2048	; 0x800
+ 8002048:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800204c:	6910      	ldr	r0, [r2, #16]
+ 800204e:	f410 7080 	ands.w	r0, r0, #256	; 0x100
+ 8002052:	ea4f 2010 	mov.w	r0, r0, lsr #8
+ 8002056:	f640 0200 	movw	r2, #2048	; 0x800
+ 800205a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800205e:	f04f 0120 	mov.w	r1, #32
+ 8002062:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 8002064:	f000 b866 	b.w	8002134 <sw_end>
+
+08002068 <switch_D>:
+	
+	.thumb_func
+switch_D:
+	CATHODE_write 1,1,0,1,1,1,1,1
+ 8002068:	f640 0200 	movw	r2, #2048	; 0x800
+ 800206c:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8002070:	f04f 0120 	mov.w	r1, #32
+ 8002074:	6191      	str	r1, [r2, #24]
+ 8002076:	f240 4200 	movw	r2, #1024	; 0x400
+ 800207a:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800207e:	f04f 0102 	mov.w	r1, #2
+ 8002082:	6191      	str	r1, [r2, #24]
+ 8002084:	f240 0200 	movw	r2, #0
+ 8002088:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800208c:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8002090:	6191      	str	r1, [r2, #24]
+ 8002092:	f240 4200 	movw	r2, #1024	; 0x400
+ 8002096:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800209a:	f04f 0120 	mov.w	r1, #32
+ 800209e:	6191      	str	r1, [r2, #24]
+ 80020a0:	f240 4200 	movw	r2, #1024	; 0x400
+ 80020a4:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80020a8:	f44f 6100 	mov.w	r1, #2048	; 0x800
+ 80020ac:	6191      	str	r1, [r2, #24]
+ 80020ae:	f640 0200 	movw	r2, #2048	; 0x800
+ 80020b2:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80020b6:	f04f 0104 	mov.w	r1, #4
+ 80020ba:	6191      	str	r1, [r2, #24]
+ 80020bc:	f640 0200 	movw	r2, #2048	; 0x800
+ 80020c0:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80020c4:	f04f 0110 	mov.w	r1, #16
+ 80020c8:	6191      	str	r1, [r2, #24]
+ 80020ca:	f240 4200 	movw	r2, #1024	; 0x400
+ 80020ce:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80020d2:	f04f 0101 	mov.w	r1, #1
+ 80020d6:	6191      	str	r1, [r2, #24]
+ 80020d8:	f640 4200 	movw	r2, #3072	; 0xc00
+ 80020dc:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80020e0:	f44f 2180 	mov.w	r1, #262144	; 0x40000
+ 80020e4:	6191      	str	r1, [r2, #24]
+ 80020e6:	f640 4200 	movw	r2, #3072	; 0xc00
+ 80020ea:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80020ee:	f04f 0104 	mov.w	r1, #4
+ 80020f2:	6191      	str	r1, [r2, #24]
+	PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+ 80020f4:	f640 0200 	movw	r2, #2048	; 0x800
+ 80020f8:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 80020fc:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 8002100:	6191      	str	r1, [r2, #24]
+	SWITCH_read GPIOA_BASE,1,GPIOA_BASE,15
+ 8002102:	f240 0200 	movw	r2, #0
+ 8002106:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800210a:	f44f 3100 	mov.w	r1, #131072	; 0x20000
+ 800210e:	6191      	str	r1, [r2, #24]
+ 8002110:	f240 0200 	movw	r2, #0
+ 8002114:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 8002118:	6910      	ldr	r0, [r2, #16]
+ 800211a:	f410 4000 	ands.w	r0, r0, #32768	; 0x8000
+ 800211e:	ea4f 30d0 	mov.w	r0, r0, lsr #15
+ 8002122:	f240 0200 	movw	r2, #0
+ 8002126:	f2c4 0202 	movt	r2, #16386	; 0x4002
+ 800212a:	f04f 0102 	mov.w	r1, #2
+ 800212e:	6191      	str	r1, [r2, #24]
+	b sw_end
+ 8002130:	f000 b800 	b.w	8002134 <sw_end>
+
+08002134 <sw_end>:
+sw_end: 
+	@;PORTBIT_write GPIOC_BASE,1,0			@;	01_PC1	CA_EN	-- enable cathode (active-low)
+	@;PORTBIT_write GPIOB_BASE,4,0			@;	01_PB4	AN_EN	-- enable anode   (active-low)
+	@;bx lr
+	@;b cont
+	push {r0,r1,r2,r3,lr}
+ 8002134:	b50f      	push	{r0, r1, r2, r3, lr}
+	bl asm_vdisplay
+ 8002136:	f000 f804 	bl	8002142 <asm_vdisplay>
+	pop {r0,r1,r2,r3,lr}
+ 800213a:	e8bd 400f 	ldmia.w	sp!, {r0, r1, r2, r3, lr}
+	b cont
+ 800213e:	f000 b883 	b.w	8002248 <cont>
+
+08002142 <asm_vdisplay>:
+	
+	.global asm_vdisplay
+	.thumb_func
+asm_vdisplay:
+	ldr r0,=vdisplay
+ 8002142:	4876      	ldr	r0, [pc, #472]	; (800231c <hw8_end+0x6>)
+	ldr r3,=mux
+ 8002144:	4b76      	ldr	r3, [pc, #472]	; (8002320 <hw8_end+0xa>)
+	ldrh r1,[r3]
+ 8002146:	8819      	ldrh	r1, [r3, #0]
+	
+	ldr r2, [r0, r1, lsl #2]
+ 8002148:	f850 2021 	ldr.w	r2, [r0, r1, lsl #2]
+	add r1,r1,#1
+ 800214c:	f101 0101 	add.w	r1, r1, #1
+	
+	cmp r1,#4
+ 8002150:	2904      	cmp	r1, #4
+	ite ge
+ 8002152:	bfac      	ite	ge
+	movwge r0,#0
+ 8002154:	f240 0000 	movwge	r0, #0
+	movlt r0,r1
+ 8002158:	4608      	movlt	r0, r1
+	str r0,[r3]
+ 800215a:	6018      	str	r0, [r3, #0]
+	
+	@;mov r1,r0
+	mov r0,r2
+ 800215c:	4610      	mov	r0, r2
+	
+	b asm_print_digit
+ 800215e:	f7fe bc7e 	b.w	8000a5e <asm_print_digit>
+
+08002162 <update_state>:
+	@; r0 - Switch #
+	@; r1 - Raw Press: 0/1 (0 IS PRESSED)
+	@; r2 - 
+	@; r3 - 
+
+	ldr r3,=sw_states
+ 8002162:	4b70      	ldr	r3, [pc, #448]	; (8002324 <hw8_end+0xe>)
+	ldr r2, [r3, r0, lsl #2]
+ 8002164:	f853 2020 	ldr.w	r2, [r3, r0, lsl #2]
+	
+	tbb [pc,r2]
+ 8002168:	e8df f002 	tbb	[pc, r2]
+
+0800216c <STATE_table>:
+ 800216c:	2a1b0c03 	.word	0x2a1b0c03
+ 8002170:	4233      	.short	0x4233
+
+08002172 <state_START>:
+	.byte ((state_C - STATE_table)/2)
+	.byte ((state_D - STATE_table)/2)
+	
+	.thumb_func
+state_START:
+	cmp r1,#0
+ 8002172:	2900      	cmp	r1, #0
+	bne loop_cont
+ 8002174:	f040 806d 	bne.w	8002252 <loop_cont>
+	movw r2,ST_A	@; advance to state A
+ 8002178:	f240 0201 	movw	r2, #1
+	str r2, [r3, r0, lsl #2]
+ 800217c:	f843 2020 	str.w	r2, [r3, r0, lsl #2]
+	b loop_cont
+ 8002180:	f000 b867 	b.w	8002252 <loop_cont>
+
+08002184 <state_A>:
+	
+	
+	.thumb_func
+state_A:
+	cmp r1,#0
+ 8002184:	2900      	cmp	r1, #0
+	bne a_ne
+ 8002186:	f040 8006 	bne.w	8002196 <a_ne>
+	movw r2,ST_B	@; advance to state B
+ 800218a:	f240 0202 	movw	r2, #2
+	str r2, [r3, r0, lsl #2]
+ 800218e:	f843 2020 	str.w	r2, [r3, r0, lsl #2]
+	b loop_cont
+ 8002192:	f000 b85e 	b.w	8002252 <loop_cont>
+
+08002196 <a_ne>:
+a_ne:
+	@;push {r4,r5}
+	movw r2,ST_Up	@; retreat to state START
+ 8002196:	f240 0200 	movw	r2, #0
+	str r2, [r3, r0, lsl #2]
+ 800219a:	f843 2020 	str.w	r2, [r3, r0, lsl #2]
+	@;pop {r4,r5}
+	b loop_cont
+ 800219e:	f000 b858 	b.w	8002252 <loop_cont>
+
+080021a2 <state_B>:
+	
+	.thumb_func
+state_B:
+	cmp r1,#0
+ 80021a2:	2900      	cmp	r1, #0
+	bne b_ne
+ 80021a4:	f040 8006 	bne.w	80021b4 <b_ne>
+	movw r2,ST_Down	@; advance to state PRESS
+ 80021a8:	f240 0203 	movw	r2, #3
+	str r2, [r3, r0, lsl #2]
+ 80021ac:	f843 2020 	str.w	r2, [r3, r0, lsl #2]
+	b get_switch_save
+ 80021b0:	f000 b82d 	b.w	800220e <get_switch_save>
+
+080021b4 <b_ne>:
+b_ne:
+	movw r2,ST_Up	@; retreat to state START
+ 80021b4:	f240 0200 	movw	r2, #0
+	str r2, [r3, r0, lsl #2]
+ 80021b8:	f843 2020 	str.w	r2, [r3, r0, lsl #2]
+	b loop_cont
+ 80021bc:	f000 b849 	b.w	8002252 <loop_cont>
+
+080021c0 <state_PRESS>:
+	
+	.thumb_func
+state_PRESS:
+	cmp r1,#0
+ 80021c0:	2900      	cmp	r1, #0
+	beq loop_cont
+ 80021c2:	f000 8046 	beq.w	8002252 <loop_cont>
+	movw r2,ST_C	@; advance to state C
+ 80021c6:	f240 0204 	movw	r2, #4
+	str r2, [r3, r0, lsl #2]
+ 80021ca:	f843 2020 	str.w	r2, [r3, r0, lsl #2]
+	b loop_cont
+ 80021ce:	f000 b840 	b.w	8002252 <loop_cont>
+
+080021d2 <state_C>:
+	
+	.thumb_func
+state_C:
+	cmp r1,#0
+ 80021d2:	2900      	cmp	r1, #0
+	bne c_ne
+ 80021d4:	f040 8006 	bne.w	80021e4 <c_ne>
+	movw r2,ST_Down	@; retreat to state PRESS
+ 80021d8:	f240 0203 	movw	r2, #3
+	str r2, [r3, r0, lsl #2]
+ 80021dc:	f843 2020 	str.w	r2, [r3, r0, lsl #2]
+	b loop_cont
+ 80021e0:	f000 b837 	b.w	8002252 <loop_cont>
+
+080021e4 <c_ne>:
+c_ne:
+	movw r2,ST_D	@; advance to state D
+ 80021e4:	f240 0205 	movw	r2, #5
+	str r2, [r3, r0, lsl #2]
+ 80021e8:	f843 2020 	str.w	r2, [r3, r0, lsl #2]
+	b loop_cont
+ 80021ec:	f000 b831 	b.w	8002252 <loop_cont>
+
+080021f0 <state_D>:
+	
+	.thumb_func
+state_D:
+	cmp r1,#0
+ 80021f0:	2900      	cmp	r1, #0
+	bne d_ne
+ 80021f2:	f040 8006 	bne.w	8002202 <d_ne>
+	movw r2,ST_Down	@; retreat to state PRESS
+ 80021f6:	f240 0203 	movw	r2, #3
+	str r2, [r3, r0, lsl #2]
+ 80021fa:	f843 2020 	str.w	r2, [r3, r0, lsl #2]
+	b loop_cont
+ 80021fe:	f000 b828 	b.w	8002252 <loop_cont>
+
+08002202 <d_ne>:
+d_ne:
+	movw r2,ST_Up	@; advance to state START
+ 8002202:	f240 0200 	movw	r2, #0
+	str r2, [r3, r0, lsl #2]
+ 8002206:	f843 2020 	str.w	r2, [r3, r0, lsl #2]
+	b get_switch_save
+ 800220a:	f000 b800 	b.w	800220e <get_switch_save>
+
+0800220e <get_switch_save>:
+	
+get_switch_save:
+	@; r0 - Switch number
+	@; r1 - Raw Press: 0/1 (0 IS PRESSED)
+	
+	eor r1,r1,#1
+ 800220e:	f081 0101 	eor.w	r1, r1, #1
+	
+	movw r2,#0
+ 8002212:	f240 0200 	movw	r2, #0
+	orr r2,r2,r1
+ 8002216:	ea42 0201 	orr.w	r2, r2, r1
+	
+	pop {r0}
+ 800221a:	bc01      	pop	{r0}
+	add r1,r0,#1	@; r0 is technically sw# - 1
+ 800221c:	f100 0101 	add.w	r1, r0, #1
+	push {r0}
+ 8002220:	b401      	push	{r0}
+	lsl r1,r1,#1
+ 8002222:	ea4f 0141 	mov.w	r1, r1, lsl #1
+	orr r2,r2,r1
+ 8002226:	ea42 0201 	orr.w	r2, r2, r1
+	
+	@;push {r1}
+	ldr r0,=outarray
+ 800222a:	483f      	ldr	r0, [pc, #252]	; (8002328 <hw8_end+0x12>)
+	str r2, [r0]
+ 800222c:	6002      	str	r2, [r0, #0]
+	@;pop {r1}
+	@;ldr r0,=vdisplay
+	@;mov r2,#1
+	@;str r1, [r0, r2, lsl #2]
+	
+	push {lr}
+ 800222e:	b500      	push	{lr}
+	bl queue
+ 8002230:	f000 f9c0 	bl	80025b4 <queue>
+	pop {lr}
+ 8002234:	f85d eb04 	ldr.w	lr, [sp], #4
+	
+	b loop_cont
+ 8002238:	f000 b80b 	b.w	8002252 <loop_cont>
+
+0800223c <asm_get_switch>:
+	
+	
+	.global asm_get_switch
+	.thumb_func
+asm_get_switch:
+	push {lr}
+ 800223c:	b500      	push	{lr}
+	@;ldrh r1,=asmticks
+	@;ldr r2,[r1]
+	@;add r2,r2,#1
+	@;str r2,[r1]
+	
+	movw r0, #0
+ 800223e:	f240 0000 	movw	r0, #0
+
+08002242 <get_switch_loop>:
+	
+get_switch_loop:
+	push {r0}
+ 8002242:	b401      	push	{r0}
+	b asm_set_switch  @; makes it dim
+ 8002244:	f7ff ba2b 	b.w	800169e <asm_set_switch>
+
+08002248 <cont>:
+cont:
+	@;DEBUG_cmp 0
+	mov r1,r0
+ 8002248:	4601      	mov	r1, r0
+	pop {r0}
+ 800224a:	bc01      	pop	{r0}
+	push {r0}
+ 800224c:	b401      	push	{r0}
+	b update_state
+ 800224e:	f7ff bf88 	b.w	8002162 <update_state>
+
+08002252 <loop_cont>:
+loop_cont:
+	pop {r0}
+ 8002252:	bc01      	pop	{r0}
+	add r0,r0,#1
+ 8002254:	f100 0001 	add.w	r0, r0, #1
+	cmp r0,#13
+ 8002258:	280d      	cmp	r0, #13
+	blt get_switch_loop
+ 800225a:	f6ff aff2 	blt.w	8002242 <get_switch_loop>
+
+0800225e <get_switch_end>:
+
+get_switch_end:
+	pop {lr}
+ 800225e:	f85d eb04 	ldr.w	lr, [sp], #4
+	bx lr
+ 8002262:	4770      	bx	lr
+
+08002264 <screw_it>:
+	
+	
+	.global screw_it
+	.thumb_func
+screw_it:
+	push {lr}
+ 8002264:	b500      	push	{lr}
+	
+	ldr r2,=fifo
+ 8002266:	4a31      	ldr	r2, [pc, #196]	; (800232c <hw8_end+0x16>)
+	ldm r2,{r0,r1}
+ 8002268:	e892 0003 	ldmia.w	r2, {r0, r1}
+	ldr r3,=vdisplay
+ 800226c:	4b2b      	ldr	r3, [pc, #172]	; (800231c <hw8_end+0x6>)
+	
+	cmp r0,#0
+ 800226e:	2800      	cmp	r0, #0
+	beq ayyy
+ 8002270:	f000 8006 	beq.w	8002280 <ayyy>
+	mov r2,#2
+ 8002274:	f04f 0202 	mov.w	r2, #2
+	str r1, [r3, r2, lsl #2]
+ 8002278:	f843 1022 	str.w	r1, [r3, r2, lsl #2]
+	b screw_end
+ 800227c:	f000 b804 	b.w	8002288 <screw_end>
+
+08002280 <ayyy>:
+	
+ayyy:
+	mov r2,#0
+ 8002280:	f04f 0200 	mov.w	r2, #0
+	str r1, [r3, r2, lsl #2]
+ 8002284:	f843 1022 	str.w	r1, [r3, r2, lsl #2]
+
+08002288 <screw_end>:
+
+screw_end:
+	pop {lr}
+ 8002288:	f85d eb04 	ldr.w	lr, [sp], #4
+	bx lr
+ 800228c:	4770      	bx	lr
+
+0800228e <asm_hw8_stuff>:
+
+
+	.global asm_hw8_stuff
+	.thumb_func
+asm_hw8_stuff:
+	push {lr}
+ 800228e:	b500      	push	{lr}
+	
+	ldr r2,=fifo
+ 8002290:	4a26      	ldr	r2, [pc, #152]	; (800232c <hw8_end+0x16>)
+	ldm r2,{r0,r1}
+ 8002292:	e892 0003 	ldmia.w	r2, {r0, r1}
+	ldr r3,=vdisplay
+ 8002296:	4b21      	ldr	r3, [pc, #132]	; (800231c <hw8_end+0x6>)
+	
+	cmp r0,#0
+ 8002298:	2800      	cmp	r0, #0
+	beq hw8_release
+ 800229a:	f000 801f 	beq.w	80022dc <hw8_release>
+	
+@;press
+	cmp r1,#1
+ 800229e:	2901      	cmp	r1, #1
+	itt eq
+ 80022a0:	bf04      	itt	eq
+	moveq r2,#0
+ 80022a2:	2200      	moveq	r2, #0
+	beq hw8_press_cont
+ 80022a4:	f000 b811 	beq.w	80022ca <hw8_press_cont>
+	
+	cmp r1,#3
+ 80022a8:	2903      	cmp	r1, #3
+	itt eq
+ 80022aa:	bf04      	itt	eq
+	moveq r2,#1
+ 80022ac:	2201      	moveq	r2, #1
+	beq hw8_press_cont
+ 80022ae:	f000 b80c 	beq.w	80022ca <hw8_press_cont>
+
+	cmp r1,#5
+ 80022b2:	2905      	cmp	r1, #5
+	itt eq
+ 80022b4:	bf04      	itt	eq
+	moveq r2,#2
+ 80022b6:	2202      	moveq	r2, #2
+	beq hw8_press_cont
+ 80022b8:	f000 b807 	beq.w	80022ca <hw8_press_cont>
+	
+	cmp r1,#7
+ 80022bc:	2907      	cmp	r1, #7
+	itt eq
+ 80022be:	bf04      	itt	eq
+	moveq r2,#3
+ 80022c0:	2203      	moveq	r2, #3
+	beq hw8_press_cont
+ 80022c2:	f000 b802 	beq.w	80022ca <hw8_press_cont>
+	
+	b hw8_end
+ 80022c6:	f000 b826 	b.w	8002316 <hw8_end>
+
+080022ca <hw8_press_cont>:
+
+hw8_press_cont:
+	ldr r1, [r3, r2, lsl #2]
+ 80022ca:	f853 1022 	ldr.w	r1, [r3, r2, lsl #2]
+	cmp r1,#15
+ 80022ce:	290f      	cmp	r1, #15
+	it lt
+ 80022d0:	bfb8      	it	lt
+	addlt r1,r1,#1
+ 80022d2:	3101      	addlt	r1, #1
+	str r1, [r3, r2, lsl #2]
+ 80022d4:	f843 1022 	str.w	r1, [r3, r2, lsl #2]
+	b hw8_end
+ 80022d8:	f000 b81d 	b.w	8002316 <hw8_end>
+
+080022dc <hw8_release>:
+	
+hw8_release:
+	cmp r1,#2
+ 80022dc:	2902      	cmp	r1, #2
+	itt eq
+ 80022de:	bf04      	itt	eq
+	moveq r2,#0
+ 80022e0:	2200      	moveq	r2, #0
+	beq hw8_release_cont
+ 80022e2:	f000 b811 	beq.w	8002308 <hw8_release_cont>
+	
+	cmp r1,#4
+ 80022e6:	2904      	cmp	r1, #4
+	itt eq
+ 80022e8:	bf04      	itt	eq
+	moveq r2,#1
+ 80022ea:	2201      	moveq	r2, #1
+	beq hw8_release_cont
+ 80022ec:	f000 b80c 	beq.w	8002308 <hw8_release_cont>
+
+	cmp r1,#6
+ 80022f0:	2906      	cmp	r1, #6
+	itt eq
+ 80022f2:	bf04      	itt	eq
+	moveq r2,#2
+ 80022f4:	2202      	moveq	r2, #2
+	beq hw8_release_cont
+ 80022f6:	f000 b807 	beq.w	8002308 <hw8_release_cont>
+	
+	cmp r1,#8
+ 80022fa:	2908      	cmp	r1, #8
+	itt eq
+ 80022fc:	bf04      	itt	eq
+	moveq r2,#3
+ 80022fe:	2203      	moveq	r2, #3
+	beq hw8_release_cont
+ 8002300:	f000 b802 	beq.w	8002308 <hw8_release_cont>
+	
+	b hw8_end
+ 8002304:	f000 b807 	b.w	8002316 <hw8_end>
+
+08002308 <hw8_release_cont>:
+hw8_release_cont:
+	ldr r1, [r3, r2, lsl #2]
+ 8002308:	f853 1022 	ldr.w	r1, [r3, r2, lsl #2]
+	cmp r1,#0
+ 800230c:	2900      	cmp	r1, #0
+	it gt
+ 800230e:	bfc8      	it	gt
+	subgt r1,r1,#1
+ 8002310:	3901      	subgt	r1, #1
+	str r1, [r3, r2, lsl #2]
+ 8002312:	f843 1022 	str.w	r1, [r3, r2, lsl #2]
+
+08002316 <hw8_end>:
+
+hw8_end:
+	pop {lr}
+ 8002316:	f85d eb04 	ldr.w	lr, [sp], #4
+	bx lr
+ 800231a:	4770      	bx	lr
+	b cont
+	
+	.global asm_vdisplay
+	.thumb_func
+asm_vdisplay:
+	ldr r0,=vdisplay
+ 800231c:	20000010 	.word	0x20000010
+	ldr r3,=mux
+ 8002320:	20000278 	.word	0x20000278
+	@; r0 - Switch #
+	@; r1 - Raw Press: 0/1 (0 IS PRESSED)
+	@; r2 - 
+	@; r3 - 
+
+	ldr r3,=sw_states
+ 8002324:	20000280 	.word	0x20000280
+	push {r0}
+	lsl r1,r1,#1
+	orr r2,r2,r1
+	
+	@;push {r1}
+	ldr r0,=outarray
+ 8002328:	200002c8 	.word	0x200002c8
+	.global screw_it
+	.thumb_func
+screw_it:
+	push {lr}
+	
+	ldr r2,=fifo
+ 800232c:	200002cc 	.word	0x200002cc
+
+08002330 <Reset_Handler>:
+	.thumb_func 			@; identify target type to linker
+Reset_Handler:				@; @; start-from-reset code; initialize hardware and system data, launch main()
+	@; copy .data section (initialized data) from flash to RAM (currently we must do this in each source file)
+	@; (!!todo: figure out how we can get the compiler/asembler/linker to place constants in .rodata, etc)
+copy_data:	
+	ldr r1, DATA_BEG
+ 8002330:	4912      	ldr	r1, [pc, #72]	; (800237c <DATA_BEG>)
+	ldr r2, TEXT_END
+ 8002332:	4a11      	ldr	r2, [pc, #68]	; (8002378 <TEXT_END>)
+	ldr r3, DATA_END
+ 8002334:	4b12      	ldr	r3, [pc, #72]	; (8002380 <DATA_END>)
+	subs r3, r3, r1			@; length of initialized data
+ 8002336:	1a5b      	subs	r3, r3, r1
+	beq zero_bss			@; skip if none
+ 8002338:	f000 8007 	beq.w	800234a <zero_bss>
+
+0800233c <copy_data_loop>:
+copy_data_loop: 
+	ldrb r4,[r2], #1		@; read byte from flash
+ 800233c:	f812 4b01 	ldrb.w	r4, [r2], #1
+	strb r4, [r1], #1  		@; store byte to RAM
+ 8002340:	f801 4b01 	strb.w	r4, [r1], #1
+	subs r3, r3, #1  		@; decrement counter
+ 8002344:	3b01      	subs	r3, #1
+	bgt copy_data_loop		@; repeat until done
+ 8002346:	f73f aff9 	bgt.w	800233c <copy_data_loop>
+
+0800234a <zero_bss>:
+
+	@; zero out .bss section (uninitialized data) (currently we must do this in each source file)
+	@; (!!todo: figure out how to get the linker to give us the extents of the merged .bss sections)
+zero_bss: 	
+	ldr r1, BSS_BEG
+ 800234a:	490e      	ldr	r1, [pc, #56]	; (8002384 <BSS_BEG>)
+	ldr r3, BSS_END
+ 800234c:	4b0e      	ldr	r3, [pc, #56]	; (8002388 <BSS_END>)
+	subs r3, r3, r1			@; Length of uninitialized data
+ 800234e:	1a5b      	subs	r3, r3, r1
+	beq initRCC				@; Skip if none
+ 8002350:	f000 8009 	beq.w	8002366 <call_main>
+	mov r2, #0				@; value to initialize .bss with
+ 8002354:	f04f 0200 	mov.w	r2, #0
+
+08002358 <zero_bss_loop>:
+zero_bss_loop: 	
+	strb r2, [r1],#1		@; Store zero
+ 8002358:	f801 2b01 	strb.w	r2, [r1], #1
+	subs r3, r3, #1			@; Decrement counter
+ 800235c:	3b01      	subs	r3, #1
+	bgt zero_bss_loop		@; Repeat until done
+ 800235e:	f73f affb 	bgt.w	8002358 <zero_bss_loop>
+
+08002362 <other_inits>:
+
+other_inits:
+	bl P24_init
+ 8002362:	f7fe f9cb 	bl	80006fc <P24_init>
+
+08002366 <call_main>:
+	@; necessary hardware stuff -- replaces SystemCoreClockUpdate() function call in main()
+	@;now called in main()
+
+	@exit to main (wont return)
+call_main:
+	bl.W (0x08010000+1)
+ 8002366:	f00d fe4b 	bl	8010000 <__sidata+0xd9a4>
+	mov	r0, #0				@; argc=0
+ 800236a:	f04f 0000 	mov.w	r0, #0
+	mov r1, #0				@; argv=NULL
+ 800236e:	f04f 0100 	mov.w	r1, #0
+	bl	main 				@; gone
+ 8002372:	f000 f813 	bl	800239c <main>
+	b .						@; trap if return
+ 8002376:	e7fe      	b.n	8002376 <call_main+0x10>
+
+08002378 <TEXT_END>:
+ 8002378:	0800265c 	.word	0x0800265c
+
+0800237c <DATA_BEG>:
+ 800237c:	20000000 	.word	0x20000000
+
+08002380 <DATA_END>:
+ 8002380:	2000006c 	.word	0x2000006c
+
+08002384 <BSS_BEG>:
+ 8002384:	2000006c 	.word	0x2000006c
+
+08002388 <BSS_END>:
+ 8002388:	200002bc 	.word	0x200002bc
+
+0800238c <BogusInt_Handler>:
+SVC_Handler: 
+	.thumb_func
+DebugMon_Handler:
+	.thumb_func
+PendSV_Handler:
+	bx  r14	 /* put a breakpoint here when we're debugging so we can trap here but then return to interrupted code */
+ 800238c:	4770      	bx	lr
+
+0800238e <SysTick_Handler>:
+ 
+ 	.thumb_func
+SysTick_Handler: 
+	push {lr}
+ 800238e:	b500      	push	{lr}
+	@;bl DMA1Stream5int_svc
+	@;bl hw8stuff
+	bl asm_vdisplay
+ 8002390:	f7ff fed7 	bl	8002142 <asm_vdisplay>
+	@;bl asm_get_switch  @; makes it dim
+	pop {lr}
+ 8002394:	f85d eb04 	ldr.w	lr, [sp], #4
+	bx lr
+ 8002398:	4770      	bx	lr
+	...
+
+0800239c <main>:
+#include "stm324xg_eval-reduced.h"
+//#include "p24.h"
+
+
+int main(void)
+{
+ 800239c:	b580      	push	{r7, lr}
+ 800239e:	af00      	add	r7, sp, #0
+	STM_EVAL_LEDInit(LED1);
+ 80023a0:	f04f 0000 	mov.w	r0, #0
+ 80023a4:	f000 f820 	bl	80023e8 <STM_EVAL_LEDInit>
+  STM_EVAL_LEDInit(LED2);
+ 80023a8:	f04f 0001 	mov.w	r0, #1
+ 80023ac:	f000 f81c 	bl	80023e8 <STM_EVAL_LEDInit>
+  STM_EVAL_LEDInit(LED3);
+ 80023b0:	f04f 0002 	mov.w	r0, #2
+ 80023b4:	f000 f818 	bl	80023e8 <STM_EVAL_LEDInit>
+  STM_EVAL_LEDInit(LED4);
+ 80023b8:	f04f 0003 	mov.w	r0, #3
+ 80023bc:	f000 f814 	bl	80023e8 <STM_EVAL_LEDInit>
+
+
+  /* Turn on LED1, LED2, LED3 and LED4 */
+	STM_EVAL_LEDOn(LED1);
+ 80023c0:	f04f 0000 	mov.w	r0, #0
+ 80023c4:	f000 f83a 	bl	800243c <STM_EVAL_LEDOn>
+	STM_EVAL_LEDOn(LED2);
+ 80023c8:	f04f 0001 	mov.w	r0, #1
+ 80023cc:	f000 f836 	bl	800243c <STM_EVAL_LEDOn>
+	STM_EVAL_LEDOn(LED3);
+ 80023d0:	f04f 0002 	mov.w	r0, #2
+ 80023d4:	f000 f832 	bl	800243c <STM_EVAL_LEDOn>
+	STM_EVAL_LEDOn(LED4);
+ 80023d8:	f04f 0003 	mov.w	r0, #3
+ 80023dc:	f000 f82e 	bl	800243c <STM_EVAL_LEDOn>
+
+	ANCA_INIT_All();
+ 80023e0:	f000 f8c0 	bl	8002564 <ANCA_INIT_All>
+	//asm_print_digit(2,2);
+	//P24_init();
+	
+	//asm("bl.W (0x08010000+1)");		//go up to DAC1_TIM7_DMA1_init();			
+	//DMA1Stream5int_svc();			//for debug -- if you bkpt here and step into the interrupt service, you can then set bkpt there
+	while(1);
+ 80023e4:	e7fe      	b.n	80023e4 <main+0x48>
+ 80023e6:	bf00      	nop
+
+080023e8 <STM_EVAL_LEDInit>:
+  *     @arg LED3
+  *     @arg LED4
+  * @retval None
+  */
+void STM_EVAL_LEDInit(Led_TypeDef Led)
+{
+ 80023e8:	b510      	push	{r4, lr}
+  GPIO_InitTypeDef  GPIO_InitStructure;
+  
+  /* Enable the GPIO_LED Clock */
+  RCC_AHB1PeriphClockCmd(GPIO_CLK[Led], ENABLE);
+ 80023ea:	f242 53fc 	movw	r3, #9724	; 0x25fc
+ 80023ee:	f6c0 0300 	movt	r3, #2048	; 0x800
+  *     @arg LED3
+  *     @arg LED4
+  * @retval None
+  */
+void STM_EVAL_LEDInit(Led_TypeDef Led)
+{
+ 80023f2:	b082      	sub	sp, #8
+ 80023f4:	4604      	mov	r4, r0
+  GPIO_InitTypeDef  GPIO_InitStructure;
+  
+  /* Enable the GPIO_LED Clock */
+  RCC_AHB1PeriphClockCmd(GPIO_CLK[Led], ENABLE);
+ 80023f6:	2101      	movs	r1, #1
+ 80023f8:	f853 0020 	ldr.w	r0, [r3, r0, lsl #2]
+ 80023fc:	f000 f8f0 	bl	80025e0 <RCC_AHB1PeriphClockCmd>
+
+
+  /* Configure the GPIO_LED pin */
+  GPIO_InitStructure.GPIO_Pin = GPIO_PIN[Led];
+ 8002400:	f242 620c 	movw	r2, #9740	; 0x260c
+ 8002404:	f6c0 0200 	movt	r2, #2048	; 0x800
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIO_PORT[Led], &GPIO_InitStructure);
+ 8002408:	f240 0300 	movw	r3, #0
+ 800240c:	f2c2 0300 	movt	r3, #8192	; 0x2000
+  /* Enable the GPIO_LED Clock */
+  RCC_AHB1PeriphClockCmd(GPIO_CLK[Led], ENABLE);
+
+
+  /* Configure the GPIO_LED pin */
+  GPIO_InitStructure.GPIO_Pin = GPIO_PIN[Led];
+ 8002410:	f832 2014 	ldrh.w	r2, [r2, r4, lsl #1]
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIO_PORT[Led], &GPIO_InitStructure);
+ 8002414:	f853 0024 	ldr.w	r0, [r3, r4, lsl #2]
+  /* Enable the GPIO_LED Clock */
+  RCC_AHB1PeriphClockCmd(GPIO_CLK[Led], ENABLE);
+
+
+  /* Configure the GPIO_LED pin */
+  GPIO_InitStructure.GPIO_Pin = GPIO_PIN[Led];
+ 8002418:	9200      	str	r2, [sp, #0]
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+ 800241a:	2301      	movs	r3, #1
+ 800241c:	f88d 3004 	strb.w	r3, [sp, #4]
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+ 8002420:	2200      	movs	r2, #0
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+ 8002422:	f88d 3007 	strb.w	r3, [sp, #7]
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(GPIO_PORT[Led], &GPIO_InitStructure);
+ 8002426:	4669      	mov	r1, sp
+  /* Configure the GPIO_LED pin */
+  GPIO_InitStructure.GPIO_Pin = GPIO_PIN[Led];
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 8002428:	2302      	movs	r3, #2
+
+
+  /* Configure the GPIO_LED pin */
+  GPIO_InitStructure.GPIO_Pin = GPIO_PIN[Led];
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+ 800242a:	f88d 2006 	strb.w	r2, [sp, #6]
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 800242e:	f88d 3005 	strb.w	r3, [sp, #5]
+  GPIO_Init(GPIO_PORT[Led], &GPIO_InitStructure);
+ 8002432:	f000 f811 	bl	8002458 <GPIO_Init>
+}
+ 8002436:	b002      	add	sp, #8
+ 8002438:	bd10      	pop	{r4, pc}
+ 800243a:	bf00      	nop
+
+0800243c <STM_EVAL_LEDOn>:
+  *     @arg LED4  
+  * @retval None
+  */
+void STM_EVAL_LEDOn(Led_TypeDef Led)
+{
+  GPIO_PORT[Led]->BSRRL = GPIO_PIN[Led];
+ 800243c:	f240 0200 	movw	r2, #0
+ 8002440:	f242 630c 	movw	r3, #9740	; 0x260c
+ 8002444:	f2c2 0200 	movt	r2, #8192	; 0x2000
+ 8002448:	f6c0 0300 	movt	r3, #2048	; 0x800
+ 800244c:	f852 2020 	ldr.w	r2, [r2, r0, lsl #2]
+ 8002450:	f833 3010 	ldrh.w	r3, [r3, r0, lsl #1]
+ 8002454:	8313      	strh	r3, [r2, #24]
+ 8002456:	4770      	bx	lr
+
+08002458 <GPIO_Init>:
+  * @param  GPIO_InitStruct: pointer to a GPIO_InitTypeDef structure that contains
+  *         the configuration information for the specified GPIO peripheral.
+  * @retval None
+  */
+void GPIO_Init(GPIO_TypeDef* GPIOx, GPIO_InitTypeDef* GPIO_InitStruct)
+{
+ 8002458:	2200      	movs	r2, #0
+ 800245a:	e92d 07f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl}
+  //assert_param(IS_GPIO_MODE(GPIO_InitStruct->GPIO_Mode));
+  //assert_param(IS_GPIO_PUPD(GPIO_InitStruct->GPIO_PuPd));
+
+  /* ------------------------- Configure the port pins ---------------- */
+  /*-- GPIO Mode Configuration --*/
+  for (pinpos = 0x00; pinpos < 0x10; pinpos++)
+ 800245e:	4613      	mov	r3, r2
+ 8002460:	680e      	ldr	r6, [r1, #0]
+  {
+    pos = ((uint32_t)0x01) << pinpos;
+ 8002462:	2701      	movs	r7, #1
+    /* Get the port pins position */
+    currentpin = (GPIO_InitStruct->GPIO_Pin) & pos;
+
+    if (currentpin == pos)
+    {
+      GPIOx->MODER  &= ~(GPIO_MODER_MODER0 << (pinpos * 2));
+ 8002464:	f04f 0803 	mov.w	r8, #3
+ 8002468:	e003      	b.n	8002472 <GPIO_Init+0x1a>
+  //assert_param(IS_GPIO_MODE(GPIO_InitStruct->GPIO_Mode));
+  //assert_param(IS_GPIO_PUPD(GPIO_InitStruct->GPIO_PuPd));
+
+  /* ------------------------- Configure the port pins ---------------- */
+  /*-- GPIO Mode Configuration --*/
+  for (pinpos = 0x00; pinpos < 0x10; pinpos++)
+ 800246a:	3301      	adds	r3, #1
+ 800246c:	3202      	adds	r2, #2
+ 800246e:	2b10      	cmp	r3, #16
+ 8002470:	d02b      	beq.n	80024ca <GPIO_Init+0x72>
+  {
+    pos = ((uint32_t)0x01) << pinpos;
+ 8002472:	fa07 f403 	lsl.w	r4, r7, r3
+    /* Get the port pins position */
+    currentpin = (GPIO_InitStruct->GPIO_Pin) & pos;
+ 8002476:	ea04 0506 	and.w	r5, r4, r6
+
+    if (currentpin == pos)
+ 800247a:	42a5      	cmp	r5, r4
+ 800247c:	d1f5      	bne.n	800246a <GPIO_Init+0x12>
+    {
+      GPIOx->MODER  &= ~(GPIO_MODER_MODER0 << (pinpos * 2));
+ 800247e:	f8d0 9000 	ldr.w	r9, [r0]
+      GPIOx->MODER |= (((uint32_t)GPIO_InitStruct->GPIO_Mode) << (pinpos * 2));
+ 8002482:	f891 c004 	ldrb.w	ip, [r1, #4]
+    /* Get the port pins position */
+    currentpin = (GPIO_InitStruct->GPIO_Pin) & pos;
+
+    if (currentpin == pos)
+    {
+      GPIOx->MODER  &= ~(GPIO_MODER_MODER0 << (pinpos * 2));
+ 8002486:	fa08 f402 	lsl.w	r4, r8, r2
+ 800248a:	43e4      	mvns	r4, r4
+ 800248c:	ea04 0909 	and.w	r9, r4, r9
+ 8002490:	f8c0 9000 	str.w	r9, [r0]
+      GPIOx->MODER |= (((uint32_t)GPIO_InitStruct->GPIO_Mode) << (pinpos * 2));
+ 8002494:	f8d0 9000 	ldr.w	r9, [r0]
+ 8002498:	fa0c fa02 	lsl.w	sl, ip, r2
+
+      if ((GPIO_InitStruct->GPIO_Mode == GPIO_Mode_OUT) || (GPIO_InitStruct->GPIO_Mode == GPIO_Mode_AF))
+ 800249c:	f10c 3cff 	add.w	ip, ip, #4294967295
+    currentpin = (GPIO_InitStruct->GPIO_Pin) & pos;
+
+    if (currentpin == pos)
+    {
+      GPIOx->MODER  &= ~(GPIO_MODER_MODER0 << (pinpos * 2));
+      GPIOx->MODER |= (((uint32_t)GPIO_InitStruct->GPIO_Mode) << (pinpos * 2));
+ 80024a0:	ea4a 0909 	orr.w	r9, sl, r9
+
+      if ((GPIO_InitStruct->GPIO_Mode == GPIO_Mode_OUT) || (GPIO_InitStruct->GPIO_Mode == GPIO_Mode_AF))
+ 80024a4:	f1bc 0f01 	cmp.w	ip, #1
+    currentpin = (GPIO_InitStruct->GPIO_Pin) & pos;
+
+    if (currentpin == pos)
+    {
+      GPIOx->MODER  &= ~(GPIO_MODER_MODER0 << (pinpos * 2));
+      GPIOx->MODER |= (((uint32_t)GPIO_InitStruct->GPIO_Mode) << (pinpos * 2));
+ 80024a8:	f8c0 9000 	str.w	r9, [r0]
+
+      if ((GPIO_InitStruct->GPIO_Mode == GPIO_Mode_OUT) || (GPIO_InitStruct->GPIO_Mode == GPIO_Mode_AF))
+ 80024ac:	d910      	bls.n	80024d0 <GPIO_Init+0x78>
+        GPIOx->OTYPER  &= ~((GPIO_OTYPER_OT_0) << ((uint16_t)pinpos)) ;
+        GPIOx->OTYPER |= (uint16_t)(((uint16_t)GPIO_InitStruct->GPIO_OType) << ((uint16_t)pinpos));
+      }
+
+      /* Pull-up Pull down resistor configuration*/
+      GPIOx->PUPDR &= ~(GPIO_PUPDR_PUPDR0 << ((uint16_t)pinpos * 2));
+ 80024ae:	68c5      	ldr	r5, [r0, #12]
+      GPIOx->PUPDR |= (((uint32_t)GPIO_InitStruct->GPIO_PuPd) << (pinpos * 2));
+ 80024b0:	f891 c007 	ldrb.w	ip, [r1, #7]
+        GPIOx->OTYPER  &= ~((GPIO_OTYPER_OT_0) << ((uint16_t)pinpos)) ;
+        GPIOx->OTYPER |= (uint16_t)(((uint16_t)GPIO_InitStruct->GPIO_OType) << ((uint16_t)pinpos));
+      }
+
+      /* Pull-up Pull down resistor configuration*/
+      GPIOx->PUPDR &= ~(GPIO_PUPDR_PUPDR0 << ((uint16_t)pinpos * 2));
+ 80024b4:	402c      	ands	r4, r5
+ 80024b6:	60c4      	str	r4, [r0, #12]
+      GPIOx->PUPDR |= (((uint32_t)GPIO_InitStruct->GPIO_PuPd) << (pinpos * 2));
+ 80024b8:	68c5      	ldr	r5, [r0, #12]
+ 80024ba:	fa0c f402 	lsl.w	r4, ip, r2
+  //assert_param(IS_GPIO_MODE(GPIO_InitStruct->GPIO_Mode));
+  //assert_param(IS_GPIO_PUPD(GPIO_InitStruct->GPIO_PuPd));
+
+  /* ------------------------- Configure the port pins ---------------- */
+  /*-- GPIO Mode Configuration --*/
+  for (pinpos = 0x00; pinpos < 0x10; pinpos++)
+ 80024be:	3301      	adds	r3, #1
+        GPIOx->OTYPER |= (uint16_t)(((uint16_t)GPIO_InitStruct->GPIO_OType) << ((uint16_t)pinpos));
+      }
+
+      /* Pull-up Pull down resistor configuration*/
+      GPIOx->PUPDR &= ~(GPIO_PUPDR_PUPDR0 << ((uint16_t)pinpos * 2));
+      GPIOx->PUPDR |= (((uint32_t)GPIO_InitStruct->GPIO_PuPd) << (pinpos * 2));
+ 80024c0:	432c      	orrs	r4, r5
+ 80024c2:	3202      	adds	r2, #2
+  //assert_param(IS_GPIO_MODE(GPIO_InitStruct->GPIO_Mode));
+  //assert_param(IS_GPIO_PUPD(GPIO_InitStruct->GPIO_PuPd));
+
+  /* ------------------------- Configure the port pins ---------------- */
+  /*-- GPIO Mode Configuration --*/
+  for (pinpos = 0x00; pinpos < 0x10; pinpos++)
+ 80024c4:	2b10      	cmp	r3, #16
+        GPIOx->OTYPER |= (uint16_t)(((uint16_t)GPIO_InitStruct->GPIO_OType) << ((uint16_t)pinpos));
+      }
+
+      /* Pull-up Pull down resistor configuration*/
+      GPIOx->PUPDR &= ~(GPIO_PUPDR_PUPDR0 << ((uint16_t)pinpos * 2));
+      GPIOx->PUPDR |= (((uint32_t)GPIO_InitStruct->GPIO_PuPd) << (pinpos * 2));
+ 80024c6:	60c4      	str	r4, [r0, #12]
+  //assert_param(IS_GPIO_MODE(GPIO_InitStruct->GPIO_Mode));
+  //assert_param(IS_GPIO_PUPD(GPIO_InitStruct->GPIO_PuPd));
+
+  /* ------------------------- Configure the port pins ---------------- */
+  /*-- GPIO Mode Configuration --*/
+  for (pinpos = 0x00; pinpos < 0x10; pinpos++)
+ 80024c8:	d1d3      	bne.n	8002472 <GPIO_Init+0x1a>
+      /* Pull-up Pull down resistor configuration*/
+      GPIOx->PUPDR &= ~(GPIO_PUPDR_PUPDR0 << ((uint16_t)pinpos * 2));
+      GPIOx->PUPDR |= (((uint32_t)GPIO_InitStruct->GPIO_PuPd) << (pinpos * 2));
+    }
+  }
+}
+ 80024ca:	e8bd 07f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl}
+ 80024ce:	4770      	bx	lr
+      {
+        /* Check Speed mode parameters */
+        //assert_param(IS_GPIO_SPEED(GPIO_InitStruct->GPIO_Speed));
+
+        /* Speed mode configuration */
+        GPIOx->OSPEEDR &= ~(GPIO_OSPEEDER_OSPEEDR0 << (pinpos * 2));
+ 80024d0:	f8d0 a008 	ldr.w	sl, [r0, #8]
+        GPIOx->OSPEEDR |= ((uint32_t)(GPIO_InitStruct->GPIO_Speed) << (pinpos * 2));
+ 80024d4:	f891 9005 	ldrb.w	r9, [r1, #5]
+        /* Check Output mode parameters */
+        //assert_param(IS_GPIO_OTYPE(GPIO_InitStruct->GPIO_OType));
+
+        /* Output mode configuration*/
+        GPIOx->OTYPER  &= ~((GPIO_OTYPER_OT_0) << ((uint16_t)pinpos)) ;
+        GPIOx->OTYPER |= (uint16_t)(((uint16_t)GPIO_InitStruct->GPIO_OType) << ((uint16_t)pinpos));
+ 80024d8:	f891 c006 	ldrb.w	ip, [r1, #6]
+      {
+        /* Check Speed mode parameters */
+        //assert_param(IS_GPIO_SPEED(GPIO_InitStruct->GPIO_Speed));
+
+        /* Speed mode configuration */
+        GPIOx->OSPEEDR &= ~(GPIO_OSPEEDER_OSPEEDR0 << (pinpos * 2));
+ 80024dc:	ea04 0a0a 	and.w	sl, r4, sl
+ 80024e0:	f8c0 a008 	str.w	sl, [r0, #8]
+        GPIOx->OSPEEDR |= ((uint32_t)(GPIO_InitStruct->GPIO_Speed) << (pinpos * 2));
+ 80024e4:	f8d0 a008 	ldr.w	sl, [r0, #8]
+ 80024e8:	fa09 f902 	lsl.w	r9, r9, r2
+ 80024ec:	ea49 090a 	orr.w	r9, r9, sl
+ 80024f0:	f8c0 9008 	str.w	r9, [r0, #8]
+
+        /* Check Output mode parameters */
+        //assert_param(IS_GPIO_OTYPE(GPIO_InitStruct->GPIO_OType));
+
+        /* Output mode configuration*/
+        GPIOx->OTYPER  &= ~((GPIO_OTYPER_OT_0) << ((uint16_t)pinpos)) ;
+ 80024f4:	f8d0 9004 	ldr.w	r9, [r0, #4]
+ 80024f8:	ea29 0505 	bic.w	r5, r9, r5
+ 80024fc:	6045      	str	r5, [r0, #4]
+        GPIOx->OTYPER |= (uint16_t)(((uint16_t)GPIO_InitStruct->GPIO_OType) << ((uint16_t)pinpos));
+ 80024fe:	6845      	ldr	r5, [r0, #4]
+ 8002500:	fa0c fc03 	lsl.w	ip, ip, r3
+  
+  temp = ((uint32_t)(GPIO_AF) << ((uint32_t)((uint32_t)GPIO_PinSource & (uint32_t)0x07) * 4)) ;
+  GPIOx->AFR[GPIO_PinSource >> 0x03] &= ~((uint32_t)0xF << ((uint32_t)((uint32_t)GPIO_PinSource & (uint32_t)0x07) * 4)) ;
+  temp_2 = GPIOx->AFR[GPIO_PinSource >> 0x03] | temp;
+  GPIOx->AFR[GPIO_PinSource >> 0x03] = temp_2;
+}
+ 8002504:	fa1f fc8c 	uxth.w	ip, ip
+        /* Check Output mode parameters */
+        //assert_param(IS_GPIO_OTYPE(GPIO_InitStruct->GPIO_OType));
+
+        /* Output mode configuration*/
+        GPIOx->OTYPER  &= ~((GPIO_OTYPER_OT_0) << ((uint16_t)pinpos)) ;
+        GPIOx->OTYPER |= (uint16_t)(((uint16_t)GPIO_InitStruct->GPIO_OType) << ((uint16_t)pinpos));
+ 8002508:	ea4c 0505 	orr.w	r5, ip, r5
+ 800250c:	6045      	str	r5, [r0, #4]
+ 800250e:	e7ce      	b.n	80024ae <GPIO_Init+0x56>
+
+08002510 <ANCAInit>:
+	ANCAInit(AN_EN);
+	ANCAInit(AN_CLK);
+}
+
+void ANCAInit(ANCA_TypeDef Anca)
+{
+ 8002510:	b510      	push	{r4, lr}
+  GPIO_InitTypeDef  GPIO_InitStructure;
+  
+  /* Enable the GPIO_LED Clock */
+  RCC_AHB1PeriphClockCmd(ANCA_CLK[Anca], ENABLE);
+ 8002512:	f242 6314 	movw	r3, #9748	; 0x2614
+ 8002516:	f6c0 0300 	movt	r3, #2048	; 0x800
+	ANCAInit(AN_EN);
+	ANCAInit(AN_CLK);
+}
+
+void ANCAInit(ANCA_TypeDef Anca)
+{
+ 800251a:	b082      	sub	sp, #8
+ 800251c:	4604      	mov	r4, r0
+  GPIO_InitTypeDef  GPIO_InitStructure;
+  
+  /* Enable the GPIO_LED Clock */
+  RCC_AHB1PeriphClockCmd(ANCA_CLK[Anca], ENABLE);
+ 800251e:	2101      	movs	r1, #1
+ 8002520:	f853 0020 	ldr.w	r0, [r3, r0, lsl #2]
+ 8002524:	f000 f85c 	bl	80025e0 <RCC_AHB1PeriphClockCmd>
+
+
+  /* Configure the GPIO_LED pin */
+  GPIO_InitStructure.GPIO_Pin = ANCA_PIN[Anca];
+ 8002528:	f242 6244 	movw	r2, #9796	; 0x2644
+ 800252c:	f6c0 0200 	movt	r2, #2048	; 0x800
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(ANCA_PORT[Anca], &GPIO_InitStructure);
+ 8002530:	f240 033c 	movw	r3, #60	; 0x3c
+ 8002534:	f2c2 0300 	movt	r3, #8192	; 0x2000
+  /* Enable the GPIO_LED Clock */
+  RCC_AHB1PeriphClockCmd(ANCA_CLK[Anca], ENABLE);
+
+
+  /* Configure the GPIO_LED pin */
+  GPIO_InitStructure.GPIO_Pin = ANCA_PIN[Anca];
+ 8002538:	f832 2014 	ldrh.w	r2, [r2, r4, lsl #1]
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(ANCA_PORT[Anca], &GPIO_InitStructure);
+ 800253c:	f853 0024 	ldr.w	r0, [r3, r4, lsl #2]
+  /* Enable the GPIO_LED Clock */
+  RCC_AHB1PeriphClockCmd(ANCA_CLK[Anca], ENABLE);
+
+
+  /* Configure the GPIO_LED pin */
+  GPIO_InitStructure.GPIO_Pin = ANCA_PIN[Anca];
+ 8002540:	9200      	str	r2, [sp, #0]
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+ 8002542:	2301      	movs	r3, #1
+ 8002544:	f88d 3004 	strb.w	r3, [sp, #4]
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+ 8002548:	2200      	movs	r2, #0
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+ 800254a:	f88d 3007 	strb.w	r3, [sp, #7]
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+  GPIO_Init(ANCA_PORT[Anca], &GPIO_InitStructure);
+ 800254e:	4669      	mov	r1, sp
+  /* Configure the GPIO_LED pin */
+  GPIO_InitStructure.GPIO_Pin = ANCA_PIN[Anca];
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 8002550:	2302      	movs	r3, #2
+
+
+  /* Configure the GPIO_LED pin */
+  GPIO_InitStructure.GPIO_Pin = ANCA_PIN[Anca];
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+ 8002552:	f88d 2006 	strb.w	r2, [sp, #6]
+  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+ 8002556:	f88d 3005 	strb.w	r3, [sp, #5]
+  GPIO_Init(ANCA_PORT[Anca], &GPIO_InitStructure);
+ 800255a:	f7ff ff7d 	bl	8002458 <GPIO_Init>
+}
+ 800255e:	b002      	add	sp, #8
+ 8002560:	bd10      	pop	{r4, pc}
+ 8002562:	bf00      	nop
+
+08002564 <ANCA_INIT_All>:
+const uint32_t ANCA_CLK[ANCAn] = {CA_A_GPIO_CLK, CA_B_GPIO_CLK,
+                                 CA_C_GPIO_CLK, CA_D_GPIO_CLK, CA_E_GPIO_CLK,
+																 CA_F_GPIO_CLK, CA_G_GPIO_CLK, CA_DP_GPIO_CLK, CA_EN_GPIO_CLK, 
+																 CA_CLK_GPIO_CLK, AN_EN_GPIO_CLK, AN_CLK_GPIO_CLK};
+
+void ANCA_INIT_All() {
+ 8002564:	b508      	push	{r3, lr}
+	ANCAInit(A_COLON);
+ 8002566:	2000      	movs	r0, #0
+ 8002568:	f7ff ffd2 	bl	8002510 <ANCAInit>
+	ANCAInit(B_DIGIT4);
+ 800256c:	2001      	movs	r0, #1
+ 800256e:	f7ff ffcf 	bl	8002510 <ANCAInit>
+	ANCAInit(C_DIGIT2);
+ 8002572:	2002      	movs	r0, #2
+ 8002574:	f7ff ffcc 	bl	8002510 <ANCAInit>
+	ANCAInit(D_ROT_ENC);
+ 8002578:	2003      	movs	r0, #3
+ 800257a:	f7ff ffc9 	bl	8002510 <ANCAInit>
+	ANCAInit(E_R);
+ 800257e:	2004      	movs	r0, #4
+ 8002580:	f7ff ffc6 	bl	8002510 <ANCAInit>
+	ANCAInit(F_DIGIT1);
+ 8002584:	2005      	movs	r0, #5
+ 8002586:	f7ff ffc3 	bl	8002510 <ANCAInit>
+	ANCAInit(G_DIGIT3);
+ 800258a:	2006      	movs	r0, #6
+ 800258c:	f7ff ffc0 	bl	8002510 <ANCAInit>
+	ANCAInit(DP_G);
+ 8002590:	2007      	movs	r0, #7
+ 8002592:	f7ff ffbd 	bl	8002510 <ANCAInit>
+	ANCAInit(CA_EN);
+ 8002596:	2008      	movs	r0, #8
+ 8002598:	f7ff ffba 	bl	8002510 <ANCAInit>
+	ANCAInit(CA_CLK);
+ 800259c:	2009      	movs	r0, #9
+ 800259e:	f7ff ffb7 	bl	8002510 <ANCAInit>
+	ANCAInit(AN_EN);
+ 80025a2:	200a      	movs	r0, #10
+ 80025a4:	f7ff ffb4 	bl	8002510 <ANCAInit>
+	ANCAInit(AN_CLK);
+ 80025a8:	200b      	movs	r0, #11
+}
+ 80025aa:	e8bd 4008 	ldmia.w	sp!, {r3, lr}
+	ANCAInit(G_DIGIT3);
+	ANCAInit(DP_G);
+	ANCAInit(CA_EN);
+	ANCAInit(CA_CLK);
+	ANCAInit(AN_EN);
+	ANCAInit(AN_CLK);
+ 80025ae:	f7ff bfaf 	b.w	8002510 <ANCAInit>
+ 80025b2:	bf00      	nop
+
+080025b4 <queue>:
+{
+	
+}
+
+int queue(swevent_t * in) {
+	if(tail < QSIZE){
+ 80025b4:	4a08      	ldr	r2, [pc, #32]	; (80025d8 <queue+0x24>)
+ 80025b6:	6813      	ldr	r3, [r2, #0]
+ 80025b8:	2b13      	cmp	r3, #19
+void ANCA_Print_Ascii (char c, int digit)
+{
+	
+}
+
+int queue(swevent_t * in) {
+ 80025ba:	b410      	push	{r4}
+	if(tail < QSIZE){
+ 80025bc:	d808      	bhi.n	80025d0 <queue+0x1c>
+		//fifo[tail].pr = in->pr;
+		//fifo[tail].sw = in->sw;
+		//fifo[tail++].msec = in->msec;
+		fifo[tail++] = *in;
+ 80025be:	6804      	ldr	r4, [r0, #0]
+ 80025c0:	4806      	ldr	r0, [pc, #24]	; (80025dc <queue+0x28>)
+ 80025c2:	1c59      	adds	r1, r3, #1
+ 80025c4:	f840 4023 	str.w	r4, [r0, r3, lsl #2]
+ 80025c8:	6011      	str	r1, [r2, #0]
+		return 0;
+ 80025ca:	2000      	movs	r0, #0
+	} else {
+		return -1;
+	}
+}
+ 80025cc:	bc10      	pop	{r4}
+ 80025ce:	4770      	bx	lr
+		//fifo[tail].sw = in->sw;
+		//fifo[tail++].msec = in->msec;
+		fifo[tail++] = *in;
+		return 0;
+	} else {
+		return -1;
+ 80025d0:	f04f 30ff 	mov.w	r0, #4294967295
+ 80025d4:	e7fa      	b.n	80025cc <queue+0x18>
+ 80025d6:	bf00      	nop
+ 80025d8:	200002b8 	.word	0x200002b8
+ 80025dc:	200002cc 	.word	0x200002cc
+
+080025e0 <RCC_AHB1PeriphClockCmd>:
+  //assert_param(IS_RCC_AHB1_CLOCK_PERIPH(RCC_AHB1Periph));
+
+  //assert_param(IS_FUNCTIONAL_STATE(NewState));
+  if (NewState != DISABLE)
+  {
+    RCC->AHB1ENR |= RCC_AHB1Periph;
+ 80025e0:	f44f 5360 	mov.w	r3, #14336	; 0x3800
+ 80025e4:	f2c4 0302 	movt	r3, #16386	; 0x4002
+ 80025e8:	6b1a      	ldr	r2, [r3, #48]	; 0x30
+{
+  /* Check the parameters */
+  //assert_param(IS_RCC_AHB1_CLOCK_PERIPH(RCC_AHB1Periph));
+
+  //assert_param(IS_FUNCTIONAL_STATE(NewState));
+  if (NewState != DISABLE)
+ 80025ea:	b919      	cbnz	r1, 80025f4 <RCC_AHB1PeriphClockCmd+0x14>
+  {
+    RCC->AHB1ENR |= RCC_AHB1Periph;
+  }
+  else
+  {
+    RCC->AHB1ENR &= ~RCC_AHB1Periph;
+ 80025ec:	ea22 0000 	bic.w	r0, r2, r0
+ 80025f0:	6318      	str	r0, [r3, #48]	; 0x30
+ 80025f2:	4770      	bx	lr
+  //assert_param(IS_RCC_AHB1_CLOCK_PERIPH(RCC_AHB1Periph));
+
+  //assert_param(IS_FUNCTIONAL_STATE(NewState));
+  if (NewState != DISABLE)
+  {
+    RCC->AHB1ENR |= RCC_AHB1Periph;
+ 80025f4:	4310      	orrs	r0, r2
+ 80025f6:	6318      	str	r0, [r3, #48]	; 0x30
+ 80025f8:	4770      	bx	lr
+ 80025fa:	bf00      	nop
+
+080025fc <GPIO_CLK>:
+ 80025fc:	0008 0000 0008 0000 0008 0000 0008 0000     ................
+
+0800260c <GPIO_PIN>:
+ 800260c:	1000 2000 4000 8000                         ... .@..
+
+08002614 <ANCA_CLK>:
+ 8002614:	0004 0000 0002 0000 0001 0000 0002 0000     ................
+ 8002624:	0002 0000 0004 0000 0004 0000 0002 0000     ................
+ 8002634:	0004 0000 0008 0000 0002 0000 0004 0000     ................
+
+08002644 <ANCA_PIN>:
+ 8002644:	0020 0002 0002 0020 0800 0004 0010 0001      ..... .........
+ 8002654:	0002 0004 0010 0800                         ........

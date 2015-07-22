@@ -1,0 +1,31 @@
+*** Creating Trace Output File '.\Targets\STM32F4_Discovery\project.tra' Ok.
+### Preparing for ADS-LD.
+### Creating ADS-LD Command Line
+### List of Objects: adding '".\targets\stm32f4_discovery\startup_stm32f40_41xxx.o"'
+### List of Objects: adding '".\targets\stm32f4_discovery\misc.o"'
+### List of Objects: adding '".\targets\stm32f4_discovery\stm32f4xx_rcc.o"'
+### List of Objects: adding '".\targets\stm32f4_discovery\stm32f4xx_gpio.o"'
+### List of Objects: adding '".\targets\stm32f4_discovery\tm_stm32f4_delay.o"'
+### List of Objects: adding '".\targets\stm32f4_discovery\tm_stm32f4_disco.o"'
+### List of Objects: adding '".\targets\stm32f4_discovery\tm_stm32f4_gpio.o"'
+### List of Objects: adding '".\targets\stm32f4_discovery\tm_stm32f4_timer_properties.o"'
+### List of Objects: adding '".\targets\stm32f4_discovery\tm_stm32f4_dac_signal.o"'
+### List of Objects: adding '".\targets\stm32f4_discovery\main.o"'
+### List of Objects: adding '".\targets\stm32f4_discovery\stm32f4xx_it.o"'
+### List of Objects: adding '".\targets\stm32f4_discovery\system_stm32f4xx.o"'
+### ADS-LD Command completed:
+--cpu Cortex-M4.fp ".\targets\stm32f4_discovery\startup_stm32f40_41xxx.o" ".\targets\stm32f4_discovery\misc.o" ".\targets\stm32f4_discovery\stm32f4xx_rcc.o" ".\targets\stm32f4_discovery\stm32f4xx_gpio.o" ".\targets\stm32f4_discovery\tm_stm32f4_delay.o" ".\targets\stm32f4_discovery\tm_stm32f4_disco.o" ".\targets\stm32f4_discovery\tm_stm32f4_gpio.o" ".\targets\stm32f4_discovery\tm_stm32f4_timer_properties.o" ".\targets\stm32f4_discovery\tm_stm32f4_dac_signal.o" ".\targets\stm32f4_discovery\main.o" ".\targets\stm32f4_discovery\stm32f4xx_it.o" ".\targets\stm32f4_discovery\system_stm32f4xx.o" 
+--library_type=microlib --strict --scatter ".\Targets\STM32F4_Discovery\project.sct" 
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols 
+--info sizes --info totals --info unused --info veneers 
+ --list ".\project.map" -o .\Targets\STM32F4_Discovery\project.axf### Preparing Environment (PrepEnvAds)
+### ADS-LD Output File: '.\Targets\STM32F4_Discovery\project.axf'
+### ADS-LD Command File: '.\Targets\STM32F4_Discovery\project.lnp'
+### Checking for dirty Components...
+### Creating CmdFile '.\Targets\STM32F4_Discovery\project.lnp', Handle=0x00000454
+### Writing '.lnp' file
+### ADS-LD Command file '.\Targets\STM32F4_Discovery\project.lnp' is ready.
+### ADS-LD: About to start ADS-LD Thread.
+### ADS-LD: executed with 9 errors
+### Updating obj list
+### LDADS_file() completed.

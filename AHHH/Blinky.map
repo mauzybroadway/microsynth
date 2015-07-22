@@ -1,0 +1,339 @@
+
+Allocating common symbols
+Common symbol       size              file
+
+PONG_count          0x4               aDMAint_svc.o
+fifo                0x50              p24.o
+outarray            0x4               aP24.o
+PING_count          0x4               aDMAint_svc.o
+PINGPONG_count      0x4               aDMAint_svc.o
+NVIC_InitStructure  0x4               eval.o
+
+Discarded input sections
+
+ .data          0x00000000        0x0 aDMAint_svc.o
+ .data          0x00000000        0x0 aP24.o
+ .data          0x00000000        0x0 aStartup.o
+ .bss           0x00000000        0x0 aStartup.o
+ .text          0x00000000        0x0 cMain.o
+ .data          0x00000000        0x0 cMain.o
+ .bss           0x00000000        0x0 cMain.o
+ .text          0x00000000        0x0 eval.o
+ .data          0x00000000        0x0 eval.o
+ .bss           0x00000000        0x0 eval.o
+ .text.STM_EVAL_LEDOff
+                0x00000000       0x1c eval.o
+ .text.STM_EVAL_LEDToggle
+                0x00000000       0x20 eval.o
+ COMMON         0x00000000        0x4 eval.o
+ .text          0x00000000        0x0 gpio.o
+ .data          0x00000000        0x0 gpio.o
+ .bss           0x00000000        0x0 gpio.o
+ .text.GPIO_DeInit
+                0x00000000      0x170 gpio.o
+ .text.GPIO_StructInit
+                0x00000000       0x14 gpio.o
+ .text.GPIO_PinLockConfig
+                0x00000000       0x24 gpio.o
+ .text.GPIO_ReadInputDataBit
+                0x00000000        0xc gpio.o
+ .text.GPIO_ReadInputData
+                0x00000000        0x8 gpio.o
+ .text.GPIO_ReadOutputDataBit
+                0x00000000        0xc gpio.o
+ .text.GPIO_ReadOutputData
+                0x00000000        0x8 gpio.o
+ .text.GPIO_SetBits
+                0x00000000        0x4 gpio.o
+ .text.GPIO_ResetBits
+                0x00000000        0x4 gpio.o
+ .text.GPIO_WriteBit
+                0x00000000        0xc gpio.o
+ .text.GPIO_Write
+                0x00000000        0x4 gpio.o
+ .text.GPIO_ToggleBits
+                0x00000000        0x8 gpio.o
+ .text.GPIO_PinAFConfig
+                0x00000000       0x30 gpio.o
+ .text          0x00000000        0x0 misc.o
+ .data          0x00000000        0x0 misc.o
+ .bss           0x00000000        0x0 misc.o
+ .text.NVIC_PriorityGroupConfig
+                0x00000000       0x14 misc.o
+ .text.NVIC_Init
+                0x00000000       0x80 misc.o
+ .text.NVIC_SetVectorTable
+                0x00000000       0x18 misc.o
+ .text.NVIC_SystemLPConfig
+                0x00000000       0x1c misc.o
+ .text.SysTick_CLKSourceConfig
+                0x00000000       0x1c misc.o
+ .debug_info    0x00000000      0x598 misc.o
+ .debug_abbrev  0x00000000      0x154 misc.o
+ .debug_loc     0x00000000      0x1a1 misc.o
+ .debug_aranges
+                0x00000000       0x40 misc.o
+ .debug_ranges  0x00000000       0x30 misc.o
+ .debug_line    0x00000000      0x114 misc.o
+ .debug_str     0x00000000      0x356 misc.o
+ .comment       0x00000000       0x12 misc.o
+ .ARM.attributes
+                0x00000000       0x33 misc.o
+ .debug_frame   0x00000000       0x68 misc.o
+ .text          0x00000000        0x0 p24.o
+ .data          0x00000000        0x0 p24.o
+ .bss           0x00000000        0x0 p24.o
+ .text.ANCA_Set
+                0x00000000       0x3c p24.o
+ .text.ANCA_Print_Num
+                0x00000000      0x148 p24.o
+ .text.ANCA_Print_Ascii
+                0x00000000        0x4 p24.o
+ .text.dequeue  0x00000000       0x3c p24.o
+ .text.getswitch
+                0x00000000        0x8 p24.o
+ .text.hw8stuff
+                0x00000000       0xc4 p24.o
+ .rodata        0x00000000       0x20 p24.o
+ .bss.head      0x00000000        0x4 p24.o
+ .text          0x00000000        0x0 rcc.o
+ .data          0x00000000        0x0 rcc.o
+ .bss           0x00000000        0x0 rcc.o
+ .text.RCC_APB1PeriphClockCmd
+                0x00000000       0x1c rcc.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+
+.flash          0x08000000     0x265c
+ *(.cs3.interrupt_vector)
+ .cs3.interrupt_vector
+                0x08000000       0x84 aStartup.o
+ *(.text .text.*)
+ .text          0x08000084      0x678 aDMAint_svc.o
+                0x08000084                DMA1Stream5int_svc
+ .text          0x080006fc     0x1c34 aP24.o
+                0x080006fc                P24_init
+                0x08000a5e                asm_print_digit
+                0x08002142                asm_vdisplay
+                0x0800223c                asm_get_switch
+                0x08002264                screw_it
+                0x0800228e                asm_hw8_stuff
+ .text          0x08002330       0x6a aStartup.o
+                0x08002330                Reset_Handler
+ *fill*         0x0800239a        0x2 
+ .text.main     0x0800239c       0x4c cMain.o
+                0x0800239c                main
+ .text.STM_EVAL_LEDInit
+                0x080023e8       0x54 eval.o
+                0x080023e8                STM_EVAL_LEDInit
+ .text.STM_EVAL_LEDOn
+                0x0800243c       0x1c eval.o
+                0x0800243c                STM_EVAL_LEDOn
+ .text.GPIO_Init
+                0x08002458       0xb8 gpio.o
+                0x08002458                GPIO_Init
+ .text.ANCAInit
+                0x08002510       0x54 p24.o
+                0x08002510                ANCAInit
+ .text.ANCA_INIT_All
+                0x08002564       0x50 p24.o
+                0x08002564                ANCA_INIT_All
+ .text.queue    0x080025b4       0x2c p24.o
+                0x080025b4                queue
+ .text.RCC_AHB1PeriphClockCmd
+                0x080025e0       0x1c rcc.o
+                0x080025e0                RCC_AHB1PeriphClockCmd
+ *(.rodata .rodata.*)
+ .rodata.GPIO_CLK
+                0x080025fc       0x10 eval.o
+                0x080025fc                GPIO_CLK
+ .rodata.GPIO_PIN
+                0x0800260c        0x8 eval.o
+                0x0800260c                GPIO_PIN
+ .rodata.ANCA_CLK
+                0x08002614       0x30 p24.o
+                0x08002614                ANCA_CLK
+ .rodata.ANCA_PIN
+                0x08002644       0x18 p24.o
+                0x08002644                ANCA_PIN
+                0x0800265c                __sidata = .
+
+.glue_7         0x0800265c        0x0
+ .glue_7        0x00000000        0x0 linker stubs
+
+.glue_7t        0x0800265c        0x0
+ .glue_7t       0x00000000        0x0 linker stubs
+
+.vfp11_veneer   0x0800265c        0x0
+ .vfp11_veneer  0x00000000        0x0 linker stubs
+
+.v4_bx          0x0800265c        0x0
+ .v4_bx         0x00000000        0x0 linker stubs
+
+.iplt           0x0800265c        0x0
+ .iplt          0x00000000        0x0 aDMAint_svc.o
+
+.igot.plt       0x0800265c        0x0
+ .igot.plt      0x00000000        0x0 aDMAint_svc.o
+
+.rel.dyn        0x0800265c        0x0
+ .rel.iplt      0x00000000        0x0 aDMAint_svc.o
+
+.data_at_ram    0x20000000      0x2bc load address 0x0800265c
+                0x20000000                __sdata = .
+ *(.task_stack .task_stack.*)
+ *(.data .data.*)
+ .data.GPIO_PORT
+                0x20000000       0x10 eval.o
+                0x20000000                GPIO_PORT
+ .data.vdisplay
+                0x20000010       0x2c p24.o
+                0x20000010                vdisplay
+ .data.ANCA_PORT
+                0x2000003c       0x30 p24.o
+                0x2000003c                ANCA_PORT
+                0x2000006c                __edata = .
+                0x2000006c                __sbss = .
+ *(.bss .bss.*)
+ *fill*         0x2000006c        0x4 
+ .bss           0x20000070      0x208 aDMAint_svc.o
+ .bss           0x20000278       0x40 aP24.o
+ .bss.tail      0x200002b8        0x4 p24.o
+                0x200002b8                tail
+                0x200002bc                __ebss = .
+                0x20020000                __cs3_stack = 0x20020000
+LOAD aDMAint_svc.o
+LOAD aP24.o
+LOAD aStartup.o
+LOAD cMain.o
+LOAD eval.o
+LOAD gpio.o
+LOAD misc.o
+LOAD p24.o
+LOAD rcc.o
+LOAD c:/yagarto/bin/../lib/gcc/arm-none-eabi/4.7.2\libgcc.a
+OUTPUT(./Blinky.elf elf32-littlearm)
+
+.ARM.attributes
+                0x00000000       0x2f
+ .ARM.attributes
+                0x00000000       0x21 aDMAint_svc.o
+ .ARM.attributes
+                0x00000021       0x21 aP24.o
+ .ARM.attributes
+                0x00000042       0x21 aStartup.o
+ .ARM.attributes
+                0x00000063       0x33 cMain.o
+ .ARM.attributes
+                0x00000096       0x33 eval.o
+ .ARM.attributes
+                0x000000c9       0x33 gpio.o
+ .ARM.attributes
+                0x000000fc       0x33 p24.o
+ .ARM.attributes
+                0x0000012f       0x33 rcc.o
+
+.comment        0x00000000       0x11
+ .comment       0x00000000       0x11 cMain.o
+                                 0x12 (size before relaxing)
+ .comment       0x00000000       0x12 eval.o
+ .comment       0x00000000       0x12 gpio.o
+ .comment       0x00000000       0x12 p24.o
+ .comment       0x00000000       0x12 rcc.o
+
+.debug_line     0x00000000      0xa4e
+ .debug_line    0x00000000       0xb8 aDMAint_svc.o
+ .debug_line    0x000000b8      0x1db aP24.o
+ .debug_line    0x00000293       0x68 aStartup.o
+ .debug_line    0x000002fb       0xc0 cMain.o
+ .debug_line    0x000003bb      0x13d eval.o
+ .debug_line    0x000004f8      0x26d gpio.o
+ .debug_line    0x00000765      0x22d p24.o
+ .debug_line    0x00000992       0xbc rcc.o
+
+.debug_info     0x00000000     0x1aaf
+ .debug_info    0x00000000       0x81 aDMAint_svc.o
+ .debug_info    0x00000081       0x83 aP24.o
+ .debug_info    0x00000104       0x85 aStartup.o
+ .debug_info    0x00000189       0xe4 cMain.o
+ .debug_info    0x0000026d      0x4b4 eval.o
+ .debug_info    0x00000721      0x886 gpio.o
+ .debug_info    0x00000fa7      0x7c6 p24.o
+ .debug_info    0x0000176d      0x342 rcc.o
+
+.debug_abbrev   0x00000000      0x81f
+ .debug_abbrev  0x00000000       0x14 aDMAint_svc.o
+ .debug_abbrev  0x00000014       0x14 aP24.o
+ .debug_abbrev  0x00000028       0x14 aStartup.o
+ .debug_abbrev  0x0000003c       0x99 cMain.o
+ .debug_abbrev  0x000000d5      0x19a eval.o
+ .debug_abbrev  0x0000026f      0x22e gpio.o
+ .debug_abbrev  0x0000049d      0x299 p24.o
+ .debug_abbrev  0x00000736       0xe9 rcc.o
+
+.debug_aranges  0x00000000      0x1c8
+ .debug_aranges
+                0x00000000       0x20 aDMAint_svc.o
+ .debug_aranges
+                0x00000020       0x20 aP24.o
+ .debug_aranges
+                0x00000040       0x20 aStartup.o
+ .debug_aranges
+                0x00000060       0x20 cMain.o
+ .debug_aranges
+                0x00000080       0x38 eval.o
+ .debug_aranges
+                0x000000b8       0x88 gpio.o
+ .debug_aranges
+                0x00000140       0x60 p24.o
+ .debug_aranges
+                0x000001a0       0x28 rcc.o
+
+.bss            0x200002bc       0x60 load address 0x08002918
+ COMMON         0x200002bc        0xc aDMAint_svc.o
+                0x200002bc                PONG_count
+                0x200002c0                PING_count
+                0x200002c4                PINGPONG_count
+ COMMON         0x200002c8        0x4 aP24.o
+                0x200002c8                outarray
+ COMMON         0x200002cc       0x50 p24.o
+                0x200002cc                fifo
+
+.debug_loc      0x00000000      0x76d
+ .debug_loc     0x00000000       0x2c cMain.o
+ .debug_loc     0x0000002c       0x4d eval.o
+ .debug_loc     0x00000079      0x458 gpio.o
+ .debug_loc     0x000004d1      0x228 p24.o
+ .debug_loc     0x000006f9       0x74 rcc.o
+
+.debug_ranges   0x00000000      0x118
+ .debug_ranges  0x00000000       0x10 cMain.o
+ .debug_ranges  0x00000010       0x28 eval.o
+ .debug_ranges  0x00000038       0x78 gpio.o
+ .debug_ranges  0x000000b0       0x50 p24.o
+ .debug_ranges  0x00000100       0x18 rcc.o
+
+.debug_str      0x00000000      0x7f9
+ .debug_str     0x00000000       0xf4 cMain.o
+                                0x130 (size before relaxing)
+ .debug_str     0x000000f4      0x2fe eval.o
+                                0x408 (size before relaxing)
+ .debug_str     0x000003f2      0x189 gpio.o
+                                0x444 (size before relaxing)
+ .debug_str     0x0000057b      0x11e p24.o
+                                0x41b (size before relaxing)
+ .debug_str     0x00000699      0x160 rcc.o
+                                0x29a (size before relaxing)
+
+.debug_frame    0x00000000      0x2c0
+ .debug_frame   0x00000000       0x2c cMain.o
+ .debug_frame   0x0000002c       0x5c eval.o
+ .debug_frame   0x00000088      0x118 gpio.o
+ .debug_frame   0x000001a0       0xf0 p24.o
+ .debug_frame   0x00000290       0x30 rcc.o

@@ -1,0 +1,15 @@
+added.txt
+added2.txt
+core_cm4.h
+core_cm4_simd.h
+core_cmFunc.h
+core_cmInstr.h
+misc.h
+stm32_eval_legacy.h
+stm324xg_eval.c
+stm324xg_eval.h
+stm32f4xx.h
+stm32f4xx_rcc.h
+stm32f4xx_tim.h
+stm32f4xx_usart.h
+system_stm32f4xx.h

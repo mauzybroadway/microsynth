@@ -1,0 +1,164 @@
+ARM Linker, 5.02 [Build 28] [MDK-ARM Lite]
+
+==============================================================================
+
+Section Cross References
+
+    startup_stm32f40_41xxx.o(RESET) refers to startup_stm32f40_41xxx.o(STACK) for __initial_sp
+    startup_stm32f40_41xxx.o(RESET) refers to startup_stm32f40_41xxx.o(.text) for Reset_Handler
+    startup_stm32f40_41xxx.o(RESET) refers to stm32f4xx_it.o(.text) for NMI_Handler
+    startup_stm32f40_41xxx.o(.text) refers to system_stm32f4xx.o(.text) for SystemInit
+    startup_stm32f40_41xxx.o(.text) refers to entry.o(.ARM.Collect$$$$00000000) for __main
+    stm32f4xx_rcc.o(.text) refers to stm32f4xx_rcc.o(.data) for .data
+    stm32f4xx_gpio.o(.text) refers to stm32f4xx_rcc.o(.text) for RCC_AHB1PeriphResetCmd
+    tm_stm32f4_delay.o(.text) refers to stm32f4xx_rcc.o(.text) for RCC_HSEConfig
+    tm_stm32f4_delay.o(.text) refers to tm_stm32f4_delay.o(.data) for .data
+    tm_stm32f4_delay.o(.text) refers to system_stm32f4xx.o(.data) for SystemCoreClock
+    tm_stm32f4_disco.o(.text) refers to stm32f4xx_rcc.o(.text) for RCC_AHB1PeriphClockCmd
+    tm_stm32f4_disco.o(.text) refers to stm32f4xx_gpio.o(.text) for GPIO_Init
+    tm_stm32f4_disco.o(.text) refers to tm_stm32f4_disco.o(.data) for .data
+    tm_stm32f4_gpio.o(.text) refers to stm32f4xx_gpio.o(.text) for GPIO_Init
+    tm_stm32f4_gpio.o(.text) refers to tm_stm32f4_gpio.o(.data) for .data
+    tm_stm32f4_timer_properties.o(.text) refers to stm32f4xx_rcc.o(.text) for RCC_GetClocksFreq
+    tm_stm32f4_timer_properties.o(.text) refers to dfltui.o(.text) for __aeabi_ui2d
+    tm_stm32f4_timer_properties.o(.text) refers to cdcmple.o(.text) for __aeabi_cdcmple
+    tm_stm32f4_timer_properties.o(.text) refers to ddiv.o(.text) for __aeabi_ddiv
+    tm_stm32f4_timer_properties.o(.text) refers to dfixui.o(.text) for __aeabi_d2uiz
+    tm_stm32f4_dac_signal.o(.text) refers to tm_stm32f4_gpio.o(.text) for TM_GPIO_Init
+    tm_stm32f4_dac_signal.o(.text) refers to tm_stm32f4_timer_properties.o(.text) for TM_TIMER_PROPERTIES_GetTimerProperties
+    tm_stm32f4_dac_signal.o(.text) refers to dfltui.o(.text) for __aeabi_ui2d
+    tm_stm32f4_dac_signal.o(.text) refers to dmul.o(.text) for __aeabi_dmul
+    tm_stm32f4_dac_signal.o(.text) refers to tm_stm32f4_dac_signal.o(.data) for .data
+    main.o(.text) refers to system_stm32f4xx.o(.text) for SystemInit
+    main.o(.text) refers to tm_stm32f4_delay.o(.text) for TM_DELAY_Init
+    main.o(.text) refers to tm_stm32f4_disco.o(.text) for TM_DISCO_LedInit
+    main.o(.text) refers to tm_stm32f4_dac_signal.o(.text) for TM_DAC_SIGNAL_Init
+    stm32f4xx_it.o(.text) refers to tm_stm32f4_delay.o(.text) for TimingDelay_Decrement
+    system_stm32f4xx.o(.text) refers to system_stm32f4xx.o(.data) for .data
+    entry.o(.ARM.Collect$$$$00000000) refers (Special) to entry7b.o(.ARM.Collect$$$$00000008) for _main_clock
+    entry.o(.ARM.Collect$$$$00000000) refers (Special) to entry8.o(.ARM.Collect$$$$00000009) for _main_init
+    entry.o(.ARM.Collect$$$$00000000) refers (Special) to entry5.o(.ARM.Collect$$$$00000004) for _main_scatterload
+    entry.o(.ARM.Collect$$$$00000000) refers (Special) to entry2.o(.ARM.Collect$$$$00000001) for _main_stk
+    dmul.o(.text) refers (Special) to iusefp.o(.text) for __I$use$fp
+    dmul.o(.text) refers to depilogue.o(.text) for _double_epilogue
+    ddiv.o(.text) refers (Special) to iusefp.o(.text) for __I$use$fp
+    ddiv.o(.text) refers to depilogue.o(.text) for _double_round
+    dfltui.o(.text) refers (Special) to iusefp.o(.text) for __I$use$fp
+    dfltui.o(.text) refers to depilogue.o(.text) for _double_epilogue
+    dfixui.o(.text) refers (Special) to iusefp.o(.text) for __I$use$fp
+    dfixui.o(.text) refers to llushr.o(.text) for __aeabi_llsr
+    cdcmple.o(.text) refers (Special) to iusefp.o(.text) for __I$use$fp
+    entry2.o(.ARM.Collect$$$$00000001) refers to entry2.o(.ARM.Collect$$$$00002712) for __lit__00000000
+    entry2.o(.ARM.Collect$$$$00002712) refers to startup_stm32f40_41xxx.o(STACK) for __initial_sp
+    entry2.o(__vectab_stack_and_reset_area) refers to startup_stm32f40_41xxx.o(STACK) for __initial_sp
+    entry2.o(__vectab_stack_and_reset_area) refers to entry.o(.ARM.Collect$$$$00000000) for __main
+    entry5.o(.ARM.Collect$$$$00000004) refers to init.o(.text) for __scatterload
+    entry8.o(.ARM.Collect$$$$00000009) refers to main.o(.text) for main
+    depilogue.o(.text) refers to llshl.o(.text) for __aeabi_llsl
+    depilogue.o(.text) refers to llushr.o(.text) for __aeabi_llsr
+    init.o(.text) refers to entry5.o(.ARM.Collect$$$$00000004) for __main_after_scatterload
+
+
+==============================================================================
+
+Removing Unused input sections from the image.
+
+    Removing startup_stm32f40_41xxx.o(HEAP), (512 bytes).
+    Removing misc.o(.rev16_text), (4 bytes).
+    Removing misc.o(.revsh_text), (4 bytes).
+    Removing misc.o(.rrx_text), (6 bytes).
+    Removing misc.o(.text), (176 bytes).
+    Removing stm32f4xx_rcc.o(.rev16_text), (4 bytes).
+    Removing stm32f4xx_rcc.o(.revsh_text), (4 bytes).
+    Removing stm32f4xx_rcc.o(.rrx_text), (6 bytes).
+    Removing stm32f4xx_gpio.o(.rev16_text), (4 bytes).
+    Removing stm32f4xx_gpio.o(.revsh_text), (4 bytes).
+    Removing stm32f4xx_gpio.o(.rrx_text), (6 bytes).
+    Removing tm_stm32f4_delay.o(.rev16_text), (4 bytes).
+    Removing tm_stm32f4_delay.o(.revsh_text), (4 bytes).
+    Removing tm_stm32f4_delay.o(.rrx_text), (6 bytes).
+    Removing tm_stm32f4_delay.o(.data), (4 bytes).
+    Removing tm_stm32f4_disco.o(.rev16_text), (4 bytes).
+    Removing tm_stm32f4_disco.o(.revsh_text), (4 bytes).
+    Removing tm_stm32f4_disco.o(.rrx_text), (6 bytes).
+    Removing tm_stm32f4_gpio.o(.rev16_text), (4 bytes).
+    Removing tm_stm32f4_gpio.o(.revsh_text), (4 bytes).
+    Removing tm_stm32f4_gpio.o(.rrx_text), (6 bytes).
+    Removing tm_stm32f4_timer_properties.o(.rev16_text), (4 bytes).
+    Removing tm_stm32f4_timer_properties.o(.revsh_text), (4 bytes).
+    Removing tm_stm32f4_timer_properties.o(.rrx_text), (6 bytes).
+    Removing tm_stm32f4_dac_signal.o(.rev16_text), (4 bytes).
+    Removing tm_stm32f4_dac_signal.o(.revsh_text), (4 bytes).
+    Removing tm_stm32f4_dac_signal.o(.rrx_text), (6 bytes).
+    Removing main.o(.rev16_text), (4 bytes).
+    Removing main.o(.revsh_text), (4 bytes).
+    Removing main.o(.rrx_text), (6 bytes).
+    Removing stm32f4xx_it.o(.rev16_text), (4 bytes).
+    Removing stm32f4xx_it.o(.revsh_text), (4 bytes).
+    Removing stm32f4xx_it.o(.rrx_text), (6 bytes).
+    Removing system_stm32f4xx.o(.rev16_text), (4 bytes).
+    Removing system_stm32f4xx.o(.revsh_text), (4 bytes).
+    Removing system_stm32f4xx.o(.rrx_text), (6 bytes).
+
+36 unused section(s) (total 846 bytes) removed from the image.
+
+==============================================================================
+
+Memory Map of the image
+
+  Image Entry point : 0x00000000
+
+  Load Region LR_IROM1 (Base: 0x08000000, Size: 0x00001708, Max: 0x00100000, ABSOLUTE)
+
+    Execution Region ER_IROM1 (Base: 0x08000000, Size: 0x000015f8, Max: 0x00100000, ABSOLUTE)
+
+    Base Addr    Size         Type   Attr      Idx    E Section Name        Object
+
+    0x08000000   0x00000188   Data   RO            3    RESET               startup_stm32f40_41xxx.o
+    0x08000188   0x00000000   Code   RO          440  * .ARM.Collect$$$$00000000  mc_w.l(entry.o)
+    0x08000188   0x00000004   Code   RO          453    .ARM.Collect$$$$00000001  mc_w.l(entry2.o)
+    0x0800018c   0x00000004   Code   RO          456    .ARM.Collect$$$$00000004  mc_w.l(entry5.o)
+    0x08000190   0x00000000   Code   RO          458    .ARM.Collect$$$$00000008  mc_w.l(entry7b.o)
+    0x08000190   0x00000008   Code   RO          459    .ARM.Collect$$$$00000009  mc_w.l(entry8.o)
+    0x08000198   0x00000004   Code   RO          454    .ARM.Collect$$$$00002712  mc_w.l(entry2.o)
+    0x0800019c   0x00000024   Code   RO            4    .text               startup_stm32f40_41xxx.o
+    0x080001c0   0x00000480   Code   RO          142    .text               stm32f4xx_rcc.o
+    0x08000640   0x00000204   Code   RO          168    .text               stm32f4xx_gpio.o
+    0x08000844   0x000000a0   Code   RO          192    .text               tm_stm32f4_delay.o
+    0x080008e4   0x0000009c   Code   RO          233    .text               tm_stm32f4_disco.o
+    0x08000980   0x000001e8   Code   RO          263    .text               tm_stm32f4_gpio.o
+    0x08000b68   0x0000030c   Code   RO          292    .text               tm_stm32f4_timer_properties.o
+    0x08000e74   0x00000254   Code   RO          319    .text               tm_stm32f4_dac_signal.o
+    0x080010c8   0x00000050   Code   RO          349    .text               main.o
+    0x08001118   0x0000001a   Code   RO          386    .text               stm32f4xx_it.o
+    0x08001132   0x00000002   PAD
+    0x08001134   0x00000168   Code   RO          413    .text               system_stm32f4xx.o
+    0x0800129c   0x000000e4   Code   RO          443    .text               mf_w.l(dmul.o)
+    0x08001380   0x000000de   Code   RO          445    .text               mf_w.l(ddiv.o)
+    0x0800145e   0x0000001a   Code   RO          447    .text               mf_w.l(dfltui.o)
+    0x08001478   0x00000032   Code   RO          449    .text               mf_w.l(dfixui.o)
+    0x080014aa   0x00000002   PAD
+    0x080014ac   0x00000028   Code   RO          451    .text               mf_w.l(cdcmple.o)
+    0x080014d4   0x00000020   Code   RO          460    .text               mc_w.l(llushr.o)
+    0x080014f4   0x00000000   Code   RO          462    .text               mc_w.l(iusefp.o)
+    0x080014f4   0x000000be   Code   RO          463    .text               mf_w.l(depilogue.o)
+    0x080015b2   0x00000002   PAD
+    0x080015b4   0x00000024   Code   RO          465    .text               mc_w.l(init.o)
+    0x080015d8   0x0000001e   Code   RO          467    .text               mc_w.l(llshl.o)
+    0x080015f6   0x00000002   PAD
+    0x080015f8   0x00000000   Data   RO          469    Region$$Table       anon$$obj.o
+
+
+    Execution Region RW_IRAM1 (Base: 0x20000000, Size: 0x00000510, Max: 0x00020000, ABSOLUTE)
+
+    Base Addr    Size         Type   Attr      Idx    E Section Name        Object
+
+    0x20000000   0x00000010   Data   RW          143    .data               stm32f4xx_rcc.o
+    0x20000010   0x00000010   Data   RW          194    .data               tm_stm32f4_delay.o
+    0x20000020   0x00000001   Data   RW          234    .data               tm_stm32f4_disco.o
+    0x20000021   0x00000003   PAD
+    0x20000024   0x00000008   Data   RW          264    .data               tm_stm32f4_gpio.o
+    0x2000002c   0x000000d0   Data   RW          320    .data               tm_stm32f4_dac_signal.o
+    0x200000fc   0x00000014   Data   RW          414    .data               system_stm32f4xx.o
+    0x20000110   0x00000400   Zero   RW            1    STACK               startup_stm32f40_41xxx.o
+
